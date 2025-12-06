@@ -1,0 +1,38 @@
+<!-- Modal Add Milestone -->
+<div id="milestone-modal" class="fixed inset-0 bg-black/40 hidden z-30">
+    <div class="flex justify-center items-center min-h-screen">
+        <div class="bg-white w-full max-w-md p-6 rounded-2xl shadow-lg">
+
+            <h2 class="text-lg font-semibold mb-4">Thêm mốc quan trọng</h2>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="text-sm text-gray-700">Tiêu đề</label>
+                    <input id="ms-title" type="text" class="w-full p-2 border rounded-lg">
+                </div>
+
+                <div>
+                    <label class="text-sm text-gray-700">Mô tả</label>
+                    <textarea id="ms-description" class="w-full p-2 border rounded-lg"></textarea>
+                </div>
+
+                <div>
+                    <label class="text-sm text-gray-700">Địa điểm</label>
+                    <input id="ms-location" type="text" class="w-full p-2 border rounded-lg">
+                </div>
+
+                <div>
+                    <label class="text-sm text-gray-700">Ngày diễn ra</label>
+                    <input id="ms-date" type="date" class="w-full p-2 border rounded-lg">
+                </div>
+            </div>
+
+            <div class="mt-5 flex justify-end space-x-3">
+                <button onclick="closeMilestoneModal()" class="px-4 py-2 border rounded-lg">Hủy</button>
+                <button onclick="createMilestone()" class="px-4 py-2 bg-rose-500 text-white rounded-lg">
+                    Thêm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

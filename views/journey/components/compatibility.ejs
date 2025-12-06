@@ -1,0 +1,16 @@
+<!-- Mức độ thấu hiểu -->
+<div class="bg-white rounded-2xl p-5 mt-5 shadow-sm border border-purple-100">
+    <h3 class="font-semibold text-gray-800 mb-2">Mức độ thấu hiểu ❤️</h3>
+
+    <% if (compatibility !== null) { %>
+        <div class="text-center">
+            <div class="text-4xl font-bold text-pink-500">
+                <%= compatibility %>%</div>
+            <p class="text-sm text-gray-500 mt-1">Hai bạn hiểu nhau ở mức độ này</p>
+        </div>
+        <% } else { %>
+            <p class="text-gray-500 text-sm italic">
+                Hai bạn cần làm bài test để xem mức độ thấu hiểu ❤️
+            </p>
+            <% } %>
+</div>

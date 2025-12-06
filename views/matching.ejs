@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Couple App - Tìm kiếm</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'heart-float': 'heartFloat 2s ease-in-out infinite',
+                        'card-slide': 'cardSlide 0.5s ease-out',
+                        'match-celebration': 'matchCelebration 1s ease-out',
+                        'bounce-slow': 'bounce 3s infinite',
+                        'pulse-love': 'pulseLove 2s ease-in-out infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @keyframes heartFloat {
+            0%,
+            100% {
+                transform: translateY(0) rotate(-5deg);
+            }
+            50% {
+                transform: translateY(-10px) rotate(5deg);
+            }
+        }
+        
+        @keyframes cardSlide {
+            0% {
+                transform: translateX(100%) rotate(10deg);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(0) rotate(0deg);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes matchCelebration {
+            0% {
+                transform: scale(1) rotate(0deg);
+            }
+            50% {
+                transform: scale(1.2) rotate(5deg);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+            }
+        }
+        
+        @keyframes pulseLove {
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+        }
+        
+        .profile-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .profile-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .swipe-card {
+            transition: transform 0.2s ease;
+            cursor: grab;
+        }
+        
+        .swipe-card:active {
+            cursor: grabbing;
+        }
+        
+        .swipe-card.swiping-right {
+            transform: translateX(100px) rotate(10deg);
+            opacity: 0.8;
+        }
+        
+        .swipe-card.swiping-left {
+            transform: translateX(-100px) rotate(-10deg);
+            opacity: 0.8;
+        }
+        
+        .compatibility-meter {
+            background: linear-gradient(90deg, #f87171 0%, #fbbf24 50%, #10b981 100%);
+            height: 8px;
+            border-radius: 4px;
+        }
+        
+        .compatibility-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            transition: width 1s ease-out;
+        }
+        
+        .filter-chip {
+            transition: all 0.2s ease;
+        }
+        
+        .filter-chip:hover {
+            transform: scale(1.05);
+        }
+        
+        .filter-chip.active {
+            background: linear-gradient(135deg, #ec4899, #8b5cf6);
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .discovery-bg {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            position: relative;
+            min-height: 100vh;
+        }
+        
+        .floating-elements {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .heart-particle {
+            position: absolute;
+            animation: heartFloat 3s ease-in-out infinite;
+            opacity: 0.6;
+        }
+        
+        .interest-tag {
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .interest-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body class="discovery-bg font-sans">
+
+    <!-- Floating Heart Particles -->
+    <div class="floating-elements">
+        <div class="heart-particle text-pink-300 text-xl" style="top: 10%; left: 5%; animation-delay: 0s;">💖</div>
+        <div class="heart-particle text-rose-300 text-lg" style="top: 20%; right: 10%; animation-delay: 1s;">💕</div>
+        <div class="heart-particle text-purple-300 text-sm" style="bottom: 30%; left: 10%; animation-delay: 2s;">💝</div>
+        <div class="heart-particle text-pink-400 text-lg" style="bottom: 15%; right: 15%; animation-delay: 0.5s;">💗</div>
+    </div>
+
+    <!-- Header -->
+    <div class="bg-white/80 backdrop-blur-sm border-b border-rose-100 sticky top-0 z-20">
+        <div class="max-w-md mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full flex items-center justify-center animate-pulse-love cursor-pointer" onclick="window.location.href='/home'">
+                        <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-semibold text-gray-800">Tìm kiếm</h1>
+                        <p class="text-sm text-gray-600">Khám phá người phù hợp</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="openFilters()" class="p-2 bg-pink-100 rounded-lg hover:bg-pink-200 transition-colors">
+                        <svg class="w-5 h-5 text-pink-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46"></polygon>
+                        </svg>
+                    </button>
+                    <button onclick="openMatches()" class="p-2 bg-rose-100 rounded-lg hover:bg-rose-200 transition-colors relative">
+                        <svg class="w-5 h-5 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                        <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-bounce-slow">3</span>
+                    </button>
+
+                    <button onclick="openConnect()" class="p-2 bg-rose-100 rounded-lg hover:bg-rose-200 transition-colors relative">
+                        <svg class="w-5 h-5 text-rose-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path d="M9.5 6.5a3 3 0 1 1 5 0v1.09a5.5 5.5 0 0 1 3.45 8.26l1.05 1.05a.75.75 0 1 1-1.06 1.06l-1.05-1.05A5.5 5.5 0 0 1 9.5 7.59V6.5zM12 9a3.5 3.5 0 0 0-3.16 5.03l-1.1 1.1a.75.75 0 1 0 1.06 1.06l1.1-1.1A3.5 3.5 0 1 0 12 9z"/>
+                        </svg>
+                        <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-bounce-slow">3</span>
+                    </button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-md mx-auto px-4 py-6 space-y-6 pb-24">
+
+        <!-- Quick Stats -->
+        <div class="bg-white/90 rounded-2xl p-6 shadow-sm border border-white/20 backdrop-blur-sm">
+            <div class="text-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800 mb-2">Hôm nay</h2>
+                <div class="flex items-center justify-center space-x-1 text-pink-600 animate-heart-float">
+                    <span class="text-2xl">💖</span>
+                    <span class="text-lg font-bold">12</span>
+                    <span class="text-sm">lượt thích mới</span>
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-pink-600">24</div>
+                    <div class="text-xs text-gray-600">Hồ sơ xem</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600">8</div>
+                    <div class="text-xs text-gray-600">Lượt thích</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-rose-600">3</div>
+                    <div class="text-xs text-gray-600">Kết nối</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Discovery Cards Stack -->
+        <div class="relative h-[600px] overflow-hidden">
+            <div id="cards-stack" class="relative h-full">
+
+                <!-- Card 1 -->
+                <% randomUsers.forEach(function(u, index) { %>
+                    <div class="swipe-card profile-card absolute inset-x-0 top-0 h-full rounded-3xl shadow-xl animate-card-slide" data-user-id="<%= u.id %>" style="z-index: <%= randomUsers.length - index %>;">
+                        <div class="h-full flex flex-col">
+                            <!-- Profile Image -->
+                            <div class="h-2/3 bg-gradient-to-br from-pink-200 to-rose-300 rounded-t-3xl relative overflow-hidden">
+                                <div class="absolute inset-0 flex items-center justify-center text-6xl">👩‍💼</div>
+                                <div class="absolute top-4 right-4">
+                                    <div class="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 text-sm font-medium text-gray-700">
+                                        <span class="w-2 h-2 bg-green-400 rounded-full inline-block mr-1"></span> Đang online
+                                    </div>
+                                </div>
+                                <div class="absolute bottom-4 left-4 right-4">
+                                    <div class="bg-black/20 backdrop-blur-sm rounded-xl p-3 text-white">
+                                        <h3 class="text-xl font-bold">
+                                            <%= u.name %>
+                                        </h3>
+                                        <p class="text-sm opacity-90">Marketing Manager • 2.5km</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Profile Info -->
+                            <div class="flex-1 p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="font-semibold text-gray-800">Độ tương thích</h4>
+                                    <span class="text-lg font-bold text-emerald-600">87%</span>
+                                </div>
+                                <div class="compatibility-meter mb-4">
+                                    <div class="compatibility-fill" style="width: 87%"></div>
+                                </div>
+
+                                <div class="space-y-2 mb-4">
+                                    <div class="flex items-center space-x-2 text-sm text-gray-600">
+                                        <span>🎓</span>
+                                        <span>Đại học Kinh tế TP.HCM</span>
+                                    </div>
+                                    <div class="flex items-center space-x-2 text-sm text-gray-600">
+                                        <span>♓</span>
+                                        <span>Song Ngư • INFP</span>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="interest-tag bg-pink-100 text-pink-700 px-2 py-1 rounded-full text-xs">📚 Đọc sách</span>
+                                    <span class="interest-tag bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs">🎵 Âm nhạc</span>
+                                    <span class="interest-tag bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-xs">☕ Café</span>
+                                    <span class="interest-tag bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs">✈️ Du lịch</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <%});%>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-4 z-10">
+                <button onclick="swipeCard('left')" class="w-16 h-16 bg-white shadow-lg rounded-full flex items-center justify-center hover:scale-110 transition-all">
+                    <svg class="w-8 h-8 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+
+                <button onclick="sendAnInvitation()" class="w-20 h-20 bg-gradient-to-r from-blue-400 to-cyan-400 shadow-lg rounded-full flex items-center justify-center hover:scale-110 transition-all">
+                    <svg class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                    </svg>
+                </button>
+
+                <button onclick="addFavorite()" class="w-16 h-16 bg-gradient-to-r from-pink-400 to-rose-400 shadow-lg rounded-full flex items-center justify-center hover:scale-110 transition-all">
+                    <svg class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tips Section -->
+        <div class="bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl p-6 border border-purple-200">
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-gray-800">Mẹo hẹn hò</h3>
+            </div>
+            <div id="dating-tip" class="text-sm text-gray-700 leading-relaxed">
+                💡 Hãy hoàn thiện hồ sơ của bạn với ảnh đẹp và mô tả thú vị để thu hút nhiều lượt thích hơn!
+            </div>
+            <button onclick="nextTip()" class="mt-3 text-purple-600 text-sm font-medium hover:underline">
+                Xem tip khác →
+            </button>
+        </div>
+
+        <!-- Couple Code Section -->
+        <div id="couple-code-section" class="bg-white/90 rounded-2xl p-6 shadow-sm border border-white/20 backdrop-blur-sm">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Mã couple</label>
+            <input type="text" id="couple-code" class="code-input w-full p-4 rounded-xl text-center text-lg font-mono font-bold tracking-wider uppercase focus:outline-none border border-gray-300 focus:ring-2 focus:ring-pink-400" placeholder="LOVE2024" maxlength="8">
+            <p class="text-sm text-gray-500 mt-2 text-center">Nhập mã 8 ký tự mà người yêu đã chia sẻ</p>
+            <div>
+                <p id="couple-error" class="text-red-500 text-sm text-center"></p>
+            </div>
+            <button onclick="submitCoupleCode()" class="mt-4 w-full py-3 px-4 bg-gradient-to-r from-pink-400 to-rose-400 text-white rounded-xl font-medium hover:shadow-lg transition-all">
+                Xác nhận
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters Modal -->
+    <div id="filters-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 hidden">
+        <div class="flex items-end justify-center min-h-screen p-4">
+            <div class="bg-white rounded-t-3xl w-full max-w-md transform transition-all">
+                <div class="p-6 border-b border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-800">Bộ lọc tìm kiếm</h3>
+                        <button onclick="closeFilters()" class="p-2 text-gray-400 hover:text-gray-600">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+                    <!-- Age Range -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Độ tuổi</label>
+                        <div class="flex items-center space-x-4">
+                            <input type="range" min="18" max="40" value="25" class="flex-1" id="age-slider">
+                            <span class="text-sm text-gray-600 w-16" id="age-display">18 - 40</span>
+                        </div>
+                    </div>
+
+                    <!-- Distance -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Khoảng cách</label>
+                        <div class="flex items-center space-x-4">
+                            <input type="range" min="1" max="50" value="10" class="flex-1" id="distance-slider">
+                            <span class="text-sm text-gray-600 w-16" id="distance-display">10 km</span>
+                        </div>
+                    </div>
+
+                    <!-- Interests -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Sở thích</label>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="filter-chip bg-gray-100 text-gray-700 px-3 py-2 rounded-full text-sm cursor-pointer">📚 Đọc sách</span>
+                            <span class="filter-chip bg-gray-100 text-gray-700 px-3 py-2 rounded-full text-sm cursor-pointer">🎵 Âm nhạc</span>
+                            <span class="filter-chip bg-gray-100 text-gray-700 px-3 py-2 rounded-full text-sm cursor-pointer">⚽ Thể thao</span>
+                            <span class="filter-chip bg-gray-100 text-gray-700 px-3 py-2 rounded-full text-sm cursor-pointer">🎬 Phim ảnh</span>
+                            <span class="filter-chip bg-gray-100 text-gray-700 px-3 py-2 rounded-full text-sm cursor-pointer">🍳 Nấu ăn</span>
+                            <span class="filter-chip bg-gray-100 text-gray-700 px-3 py-2 rounded-full text-sm cursor-pointer">✈️ Du lịch</span>
+                            <span class="filter-chip bg-gray-100 text-gray-700 px-3 py-2 rounded-full text-sm cursor-pointer">🎨 Nghệ thuật</span>
+                            <span class="filter-chip bg-gray-100 text-gray-700 px-3 py-2 rounded-full text-sm cursor-pointer">🧘 Yoga</span>
+                        </div>
+                    </div>
+
+                    <!-- Education -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Học vấn</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="rounded border-gray-300 text-pink-500 focus:ring-pink-500">
+                                <span class="ml-2 text-sm text-gray-700">Đại học</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="rounded border-gray-300 text-pink-500 focus:ring-pink-500">
+                                <span class="ml-2 text-sm text-gray-700">Cao đẳng</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="rounded border-gray-300 text-pink-500 focus:ring-pink-500">
+                                <span class="ml-2 text-sm text-gray-700">Thạc sĩ trở lên</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6 border-t border-gray-100">
+                    <div class="flex space-x-3">
+                        <button onclick="resetFilters()" class="flex-1 py-3 px-4 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                            Đặt lại
+                        </button>
+                        <button onclick="applyFilters()" class="flex-1 py-3 px-4 bg-gradient-to-r from-pink-400 to-rose-400 text-white rounded-xl font-medium hover:shadow-lg transition-all">
+                            Áp dụng
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Matches Modal -->
+    <div id="matches-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 hidden">
+        <div class="flex items-end justify-center min-h-screen p-4">
+            <div class="bg-white rounded-t-3xl w-full max-w-md transform transition-all">
+                <div class="p-6 border-b border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-800">Kết nối mới</h3>
+                        <button onclick="closeMatches()" class="p-2 text-gray-400 hover:text-gray-600">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                    <% if (listFavorite.length > 0) { %>
+                        <% listFavorite.forEach(f => { %>
+                            <div class="flex items-center space-x-4 p-4 bg-gradient-to-r from-pink-50 to-rose-50 rounded-2xl border border-pink-200">
+                                <div class="w-16 h-16 bg-gradient-to-br from-pink-200 to-rose-300 rounded-full flex items-center justify-center text-2xl">
+                                    <%= f.gender == 'Nam' ? '👨‍💻' : '👩‍💼' %>
+                                </div>
+
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-gray-800">
+                                        <%= f.name %>
+                                    </h4>
+                                    <p class="text-sm text-gray-600">Cả hai đều thích đọc sách và café ☕</p>
+                                    <p class="text-xs text-pink-600 mt-1">2 giờ trước</p>
+                                </div>
+
+                                <button onclick="startChat('<%= f.name %>')" class="px-4 py-2 bg-gradient-to-r from-pink-400 to-rose-400 text-white text-sm rounded-lg hover:shadow-md transition-all">
+                                    Nhắn tin
+                                </button>
+                            </div>
+                            <% }) %>
+                                <% } else { %>
+                                    <p class="text-gray-500 italic">Chưa có người dùng yêu thích nào 💭</p>
+                                    <% } %>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connect Modal -->
+    <div id="connect-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 hidden">
+        <div class="flex items-end justify-center min-h-screen p-4">
+            <div class="bg-white rounded-t-3xl w-full max-w-md transform transition-all">
+                <!-- Header -->
+                <div class="p-6 border-b border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-800">Kết nối</h3>
+                        <button onclick="closeConnect()" class="p-2 text-gray-400 hover:text-gray-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div class="flex border-b mt-4">
+                        <button class="tab-btn flex-1 py-2 text-center font-medium text-pink-600 border-b-2 border-pink-500" data-tab="received" onclick="showTab('received')">
+        Lời mời đến
+    </button>
+
+                        <button class="tab-btn flex-1 py-2 text-center font-medium text-gray-600 hover:text-gray-800" data-tab="sent" onclick="showTab('sent')">
+        Đã gửi
+    </button>
+                    </div>
+                </div>
+
+                <!-- Body -->
+                <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                    <div id="tab-received" class="space-y-4">
+                        <% if (tobeinvited && Array.isArray(tobeinvited) && tobeinvited.length > 0) { %>
+                            <% tobeinvited.forEach(u => { %>
+                                <div data-code="<%= u.couples_id %>" class="flex items-center space-x-4 p-4 bg-gradient-to-r from-pink-50 to-rose-50 rounded-2xl border border-pink-200">
+                                    <% if (u.avatar) { %>
+                                        <img src="<%= u.avatar %>" alt="<%= u.name %>" class="w-16 h-16 rounded-full object-cover border-2 border-pink-300">
+                                        <% } else { %>
+                                            <div class="w-16 h-16 bg-gradient-to-br from-pink-200 to-rose-300 rounded-full flex items-center justify-center text-2xl">
+                                                👩‍💼
+                                            </div>
+                                            <% } %>
+                                                <div class="flex-1">
+                                                    <h4 class="font-semibold text-gray-800">
+                                                        <%= u.name %>
+                                                    </h4>
+                                                    <p class="text-sm text-gray-600">Muốn kết nối với bạn 💌</p>
+                                                    <p class="text-xs text-pink-600 mt-1">
+                                                        <%= u.started_at ? new Date(u.started_at).toLocaleDateString() : "Vừa mới" %>
+                                                    </p>
+                                                    <div class="flex space-x-2 mt-2">
+                                                        <button onclick="acceptConnect('<%= u.couples_id %>')" class="px-3 py-1.5 bg-gradient-to-r from-green-400 to-emerald-400 text-white text-sm rounded-lg hover:shadow-md transition-all">
+                            Xác nhận
+                        </button>
+                                                        <button onclick="rejectConnect('<%= u.couples_id %>')" class="px-3 py-1.5 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300 transition-all">
+                            Từ chối
+                        </button>
+                                                    </div>
+                                                </div>
+                                </div>
+                                <% }) %>
+                                    <% } else { %>
+                                        <p class="text-gray-500 italic">Chưa có lời mời nào 💭</p>
+                                        <% } %>
+                    </div>
+
+                    <div id="tab-sent" class="hidden space-y-4">
+                        <% if (invited && Array.isArray(invited) && invited.length > 0) { %>
+                            <% invited.forEach(u => { %>
+                                <div data-id="<%= u.couples_id %>" class="flex items-center space-x-4 p-4 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-2xl border border-yellow-200">
+                                    <div class="w-16 h-16 bg-gradient-to-br from-yellow-200 to-amber-300 rounded-full flex items-center justify-center text-2xl">👨‍💻</div>
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-gray-800">
+                                            <%= u.name %>
+                                        </h4>
+                                        <p class="text-sm text-gray-600">Bạn đã gửi lời mời 🕒</p>
+                                        <p class="text-xs text-yellow-600 mt-1">
+                                            <%= u.status == 2 ? 'Bạn đã bị từ chối !' : 'Đang chờ xác nhận...' %>
+                                        </p>
+                                        <div class="flex space-x-2 mt-2">
+                                            <button onclick="cancelInvite('<%= u.couples_id %>')" class="px-3 py-1.5 bg-red-200 text-red-700 text-sm rounded-lg hover:bg-red-300 transition-all"> Hủy lời mời
+                                                </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <% }) %>
+                                    <% } else { %>
+                                        <p class="text-gray-500 italic">Chưa có lời mời nào được gửi 💭</p>
+                                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        function showTab(tab) {
+            // 1. Ẩn tất cả nội dung tab
+            document.getElementById('tab-received').classList.add('hidden');
+            document.getElementById('tab-sent').classList.add('hidden');
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+
+            // 2. Đổi class active cho button tab
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                if (btn.dataset.tab === tab) {
+                    // Active
+                    btn.classList.add('text-pink-600', 'border-b-2', 'border-pink-500');
+                    btn.classList.remove('text-gray-600');
+                } else {
+                    // Inactive
+                    btn.classList.remove('text-pink-600', 'border-b-2', 'border-pink-500');
+                    btn.classList.add('text-gray-600');
+                }
+            });
+        }
+        // ----- Filters -----
+        function openFilters() {
+            document.getElementById("filters-modal").classList.remove("hidden");
+        }
+
+        function closeFilters() {
+            document.getElementById("filters-modal").classList.add("hidden");
+        }
+
+        function resetFilters() {
+            document.getElementById("age-slider").value = 25;
+            document.getElementById("age-display").innerText = "18 - 40";
+            document.getElementById("distance-slider").value = 10;
+            document.getElementById("distance-display").innerText = "10 km";
+            document.querySelectorAll(".filter-chip.active").forEach(chip => chip.classList.remove("active"));
+        }
+
+        function applyFilters() {
+            alert("Bộ lọc đã được áp dụng!");
+            closeFilters();
+        }
+
+        function submitCoupleCode() {
+            const coupleCode = document.getElementById('couple-code').value.trim();
+            const errorElement = document.getElementById('couple-error'); // Giả sử có element này
+            const button = document.querySelector('button[onclick="submitCoupleCode()"]');
+            const originalText = button.textContent;
+
+            // Reset lỗi
+            if (errorElement) errorElement.textContent = '';
+
+            if (!coupleCode || coupleCode.length !== 8) {
+                if (errorElement) errorElement.textContent = 'Mã couple phải là 8 ký tự!';
+                return;
+            }
+
+            button.textContent = '🔄 Đang xử lý...';
+            button.disabled = true;
+
+            fetch('/invite-connect', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        couple_code: coupleCode
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message); // Hoặc hiển thị overlay
+                        // Có thể reload hoặc chuyển trang (tùy UI)
+                    } else {
+                        if (errorElement) errorElement.textContent = data.message;
+                    }
+                    button.textContent = originalText;
+                    button.disabled = false;
+                })
+                .catch(err => {
+                    console.error('Lỗi:', err);
+                    if (errorElement) errorElement.textContent = 'Đã xảy ra lỗi khi gửi mã!';
+                    button.textContent = originalText;
+                    button.disabled = false;
+                });
+        }
+        // ----- Matches -----
+        function openMatches() {
+            document.getElementById("matches-modal").classList.remove("hidden");
+        }
+
+        function closeMatches() {
+            document.getElementById("matches-modal").classList.add("hidden");
+        }
+        // Connect
+        function openConnect() {
+            document.getElementById("connect-modal").classList.remove("hidden");
+        }
+
+        function closeConnect() {
+            document.getElementById("connect-modal").classList.add("hidden");
+        }
+
+        function startChat(name) {
+            alert("Bắt đầu trò chuyện với " + name + " 💬");
+            closeMatches();
+        }
+
+        // ----- Swipe Cards -----
+        function swipeCard(direction) {
+            const stack = document.getElementById("cards-stack");
+            const cards = stack.querySelectorAll(".swipe-card");
+
+            if (cards.length === 0) return;
+
+            // Tìm card có z-index cao nhất (trên cùng)
+            let topCard = Array.from(cards).reduce((top, current) => {
+                const topZ = parseInt(top.style.zIndex || "0");
+                const currentZ = parseInt(current.style.zIndex || "0");
+                return currentZ > topZ ? current : top;
+            }, cards[0]);
+
+            if (!topCard) return;
+
+            if (direction === "left") {
+                topCard.classList.add("swiping-left");
+            } else {
+                topCard.classList.add("swiping-right");
+            }
+
+            setTimeout(() => {
+                topCard.remove();
+            }, 300);
+        }
+
+
+        function getTopCardUserId() {
+            const cards = document.querySelectorAll(".swipe-card");
+            if (cards.length === 0) return null;
+
+            // card đầu là card trên cùng
+            return cards[0].getAttribute("data-user-id");
+        }
+
+        async function sendAnInvitation() {
+            const user2Id = getTopCardUserId();
+            if (!user2Id) return alert("Không tìm thấy người dùng!");
+
+            const res = await fetch("/match/send-invite", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    user2_id: user2Id
+                })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alert("Đã gửi lời mời kết đôi! 💕");
+                swipeCard("right"); // animation nếu có
+            } else {
+                alert(data.message || "Gửi lời mời thất bại!");
+            }
+        }
+
+        function addFavorite() {
+            const userFavoriteId = getTopCardUserId();
+
+            fetch("/favorite/add", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        user_favorite: userFavoriteId
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message);
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Lỗi kết nối server!");
+                });
+        }
+
+        function rejectConnect(couples_id) {
+            if (!confirm("Bạn chắc chắn muốn từ chối lời mời này?")) return;
+
+            console.log('Rejecting couples_id:', couples_id); // Debug param
+
+            fetch(`/couple/reject/${couples_id}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                })
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('Server error: ' + res.status);
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.status === "success") {
+                        const item = document.querySelector(`[data-code="${couples_id}"]`);
+                        if (item) {
+                            item.remove();
+                            console.log('Item removed successfully');
+                        } else {
+                            console.log('Item not found with data-code:', couples_id);
+                        }
+                        alert("Đã từ chối lời mời!");
+                        location.reload(); // Reload để sync với DB nếu cần
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    alert("Đã xảy ra lỗi khi từ chối!");
+                });
+        }
+
+        function cancelInvite(id) {
+            if (!confirm("Bạn có chắc muốn hủy lời mời này?")) return;
+
+            fetch(`/couple/cancel/${id}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        alert("Đã hủy lời mời!");
+
+                        // Xóa dòng trong giao diện
+                        const item = document.querySelector(`[data-id="${id}"]`);
+                        if (item) item.remove();
+
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                });
+        }
+
+        // ----- Tips -----
+        const tips = [
+            "💡 Hãy hoàn thiện hồ sơ của bạn với ảnh đẹp và mô tả thú vị để thu hút nhiều lượt thích hơn!",
+            "💡 Gửi tin nhắn mở đầu sáng tạo thay vì chỉ nói 'Hi' để gây ấn tượng tốt.",
+            "💡 Tham gia các hoạt động chung với sở thích để dễ tìm người phù hợp.",
+            "💡 Luôn giữ thái độ tôn trọng và chân thành trong mọi cuộc trò chuyện."
+        ];
+        let tipIndex = 0;
+
+        function nextTip() {
+            tipIndex = (tipIndex + 1) % tips.length;
+            document.getElementById("dating-tip").innerText = tips[tipIndex];
+        }
+
+        // ----- Sliders -----
+        document.getElementById("age-slider").addEventListener("input", function() {
+            document.getElementById("age-display").innerText = "18 - " + this.value;
+        });
+        document.getElementById("distance-slider").addEventListener("input", function() {
+            document.getElementById("distance-display").innerText = this.value + " km";
+        });
+
+        // ----- Interests -----
+        document.querySelectorAll(".filter-chip").forEach(chip => {
+            chip.addEventListener("click", () => {
+                chip.classList.toggle("active");
+            });
+        });
+    </script>
+</body>
+
+</html>

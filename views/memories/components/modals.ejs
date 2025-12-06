@@ -1,0 +1,153 @@
+<!-- Modals & Overlays -->
+<div id="overlay" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-40">
+    <div id="modal" class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl mx-4">
+        <!-- dynamic modal content -->
+    </div>
+</div>
+
+<!-- Lightbox for album photos -->
+<div id="lightbox" class="fixed inset-0 bg-black/80 hidden z-50 items-center justify-center p-4">
+    <div class="max-w-3xl w-full">
+        <button onclick="closeLightbox()" class="mb-4 text-white">Đóng ✖</button>
+        <div id="lightbox-content" class="bg-white rounded-xl p-4"></div>
+    </div>
+</div>
+
+<script>
+    // ==================== ADD MEMORY MODAL ====================
+    async function submitNewMemory() {
+        const formData = new FormData();
+        formData.append("type", document.getElementById("new-type").value);
+        formData.append("title", document.getElementById("new-title").value);
+        formData.append("content", document.getElementById("new-content").value);
+        formData.append("date_time", document.getElementById("new-date").value);
+
+        selectedMedia.forEach(file => {
+            formData.append("media", file);
+        });
+
+        const res = await fetch("/memories/create", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            alert("Đã thêm kỷ niệm!");
+            location.reload();
+        } else {
+            alert("Thêm thất bại!");
+        }
+    }
+
+    function addMemory() {
+        const html = `
+        <div>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">Thêm kỷ niệm mới</h3>
+                <button onclick="closeOverlay()" class="text-gray-400">Đóng</button>
+            </div>
+
+            <div class="space-y-3">
+                <label class="block text-sm">Loại</label>
+                <select id="new-type" class="w-full rounded-md border p-2" onchange="toggleMediaUpload()">
+                    <option value="album">Album</option>
+                    <option value="diary">Nhật ký</option>
+                    <option value="timeline">Sự kiện</option>
+                </select>
+
+                <label class="block text-sm">Tiêu đề</label>
+                <input id="new-title" class="w-full rounded-md border p-2">
+
+                <label class="block text-sm">Nội dung</label>
+                <textarea id="new-content" class="w-full rounded-md border p-2" rows="4"></textarea>
+
+                <label class="block text-sm">Ngày</label>
+                <input id="new-date" type="date" class="w-full rounded-md border p-2"
+                       value="${new Date().toISOString().slice(0,10)}">
+
+                <!-- Upload section -->
+                <div id="media-upload" name="media" class="hidden mt-3">
+                    <label class="block text-sm font-medium mb-2">Ảnh / Video (tối đa 4)</label>
+
+                    <div class="grid grid-cols-2 gap-3 mb-3" id="preview-container"></div>
+
+                    <label class="w-full cursor-pointer border border-dashed rounded-xl p-4 text-center text-gray-500 hover:bg-gray-100">
+                        Chọn ảnh hoặc video
+                        <input id="new-media" type="file" accept="image/*,video/mp4"
+                               class="hidden" multiple onchange="previewMedia()">
+                    </label>
+                </div>
+
+                <div class="flex justify-end space-x-2 mt-4">
+                    <button onclick="closeOverlay()" class="px-4 py-2 rounded-md bg-gray-100">Hủy</button>
+                    <button onclick="submitNewMemory()" class="px-4 py-2 rounded-md bg-amber-400 text-white">Lưu</button>
+                </div>
+            </div>
+        </div>
+    `;
+        showOverlay(html);
+        toggleMediaUpload();
+    }
+
+
+    function toggleMediaUpload() {
+        const select = document.getElementById("new-type");
+        const upload = document.getElementById("media-upload");
+        if (!select || !upload) return; // Tránh lỗi nếu element chưa tồn tại
+
+        const type = select.value;
+        upload.classList.toggle("hidden", type !== "album");
+    }
+
+    let selectedMedia = [];
+
+    function previewMedia() {
+        const input = document.getElementById("new-media");
+        const files = Array.from(input.files);
+
+        // Giới hạn 4 file
+        if (selectedMedia.length + files.length > 4) {
+            alert("Chỉ được chọn tối đa 4 ảnh/video");
+            return;
+        }
+
+        selectedMedia.push(...files);
+        renderPreview();
+    }
+
+    function renderPreview() {
+        const container = document.getElementById("preview-container");
+        container.innerHTML = "";
+
+        selectedMedia.forEach((file, index) => {
+            const url = URL.createObjectURL(file);
+
+            let mediaHtml = "";
+
+            if (file.type.startsWith("image")) {
+                mediaHtml = `<img src="${url}" class="w-full h-32 object-cover rounded-xl">`;
+            } else {
+                mediaHtml = `
+                <video src="${url}" class="w-full h-32 rounded-xl" controls></video>
+            `;
+            }
+
+            container.innerHTML += `
+            <div class="relative group">
+                ${mediaHtml}
+                <button onclick="removeMedia(${index})"
+                        class="absolute top-1 right-1 bg-black/60 text-white rounded-full px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition">
+                    X
+                </button>
+            </div>
+        `;
+        });
+    }
+
+    function removeMedia(index) {
+        selectedMedia.splice(index, 1);
+        renderPreview();
+    }
+</script>

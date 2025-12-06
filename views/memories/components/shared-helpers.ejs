@@ -1,0 +1,99 @@
+<script>
+    // Helper functions chung
+
+    function formatDateVN(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        if (isNaN(d)) return dateStr;
+        const dd = String(d.getDate()).padStart(2, '0');
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const yyyy = d.getFullYear();
+        return `${dd}/${mm}/${yyyy}`;
+    }
+
+    function relativeTime(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        const diff = Date.now() - d.getTime();
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        if (days <= 0) return 'Hôm nay';
+        if (days === 1) return '1 ngày trước';
+        if (days < 30) return `${days} ngày trước`;
+        const months = Math.floor(days / 30);
+        if (months < 12) return `${months} tháng trước`;
+        return `${Math.floor(months / 12)} năm trước`;
+    }
+
+    function relativeDayLabel(dateStr) {
+        const d = new Date(dateStr);
+        const today = new Date();
+        if (d.toDateString() === today.toDateString()) return 'Hôm nay';
+        const diff = Math.floor((today - d) / (1000 * 60 * 60 * 24));
+        if (diff === 1) return 'Hôm qua';
+        return formatDateVN(dateStr);
+    }
+
+    function showOverlay(html) {
+        const overlay = document.getElementById('overlay');
+        const modal = document.getElementById('modal');
+        modal.innerHTML = html;
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+    }
+
+    function closeOverlay() {
+        const overlay = document.getElementById('overlay');
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex');
+        document.getElementById('modal').innerHTML = '';
+    }
+
+    function openLightbox(contentHtml) {
+        const lb = document.getElementById('lightbox');
+        document.getElementById('lightbox-content').innerHTML = contentHtml;
+        lb.classList.remove('hidden');
+        lb.classList.add('flex');
+    }
+
+    function closeLightbox() {
+        const lb = document.getElementById('lightbox');
+        lb.classList.add('hidden');
+        lb.classList.remove('flex');
+        document.getElementById('lightbox-content').innerHTML = '';
+    }
+
+    function switchMemoryTab(tab) {
+        const tabs = ['album', 'diary', 'timeline'];
+        tabs.forEach(t => {
+            const view = document.getElementById(t + '-view');
+            const btn = document.getElementById('tab-' + t);
+            if (t === tab) {
+                view.classList.remove('hidden');
+                btn.classList.add('bg-amber-100', 'text-amber-700');
+                btn.setAttribute('aria-pressed', 'true');
+            } else {
+                view.classList.add('hidden');
+                btn.classList.remove('bg-amber-100', 'text-amber-700');
+                btn.setAttribute('aria-pressed', 'false');
+            }
+        });
+    }
+
+    function searchMemories() {
+        const q = prompt('Tìm kiếm kỷ niệm (tên album, tiêu đề nhật ký, sự kiện):');
+        if (!q) return;
+        const lower = q.toLowerCase();
+        document.querySelectorAll('#albums-list .memory-card').forEach(card => {
+            const text = card.innerText.toLowerCase();
+            card.style.display = text.includes(lower) ? '' : 'none';
+        });
+        document.querySelectorAll('#diary-entries-list .diary-entry').forEach(card => {
+            const text = card.innerText.toLowerCase();
+            card.style.display = text.includes(lower) ? '' : 'none';
+        });
+        document.querySelectorAll('#timeline-entries-list .memory-card').forEach(card => {
+            const text = card.innerText.toLowerCase();
+            card.style.display = text.includes(lower) ? '' : 'none';
+        });
+    }
+</script>

@@ -1,0 +1,115 @@
+<div class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm border-t border-rose-100">
+    <div class="max-w-md mx-auto px-4 py-2">
+        <div class="flex justify-between items-center">
+            <button data-path="/home" onclick="window.location.href='/home'" class="nav-btn flex flex-col items-center py-2 px-3 rounded-xl transition-colors text-gray-400 hover:text-gray-600">
+                     <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+</svg>
+
+                    <span class="text-xs font-medium">Home</span>
+                </button>
+
+            <a data-path="/date" href="/date" class="nav-btn flex flex-col items-center py-2 px-3 rounded-xl transition-colors text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                <span class="text-xs font-medium">Date</span>
+            </a>
+
+
+            <button data-path="/journey" onclick="window.location.href='/journey'" class="nav-btn flex flex-col items-center py-2 px-3 rounded-xl transition-colors text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span class="text-xs font-medium">Journey</span>
+            </button>
+
+            <button data-path="/memories" onclick="window.location.href='/memories'" class="nav-btn flex flex-col items-center py-2 px-3 rounded-xl transition-colors text-gray-400 hover:text-gray-600" data-tab="Memories">
+                    <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2v11z"></path>
+                        <circle cx="12" cy="13" r="4"></circle>
+                    </svg>
+                    <span class="text-xs font-medium">Memories</span>
+                </button>
+
+            <button data-path="/us" onclick="window.location.href='/us'" class="nav-btn flex flex-col items-center py-2 px-3 rounded-xl transition-colors text-gray-400 hover:text-gray-600" data-tab="Us">
+                    <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                    </svg>
+                    <span class="text-xs font-medium">Us</span>
+                </button>
+        </div>
+    </div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+
+    if (window.APP_USER) {
+        socket.emit("registerUser", window.APP_USER.id);
+    }
+
+    socket.on("new_date", (data) => {
+        showRealtimeNotification(data);
+    });
+
+    function showRealtimeNotification(data) {
+        const box = document.createElement("div");
+        box.className = "realtime-popup";
+        box.innerHTML = `
+            <div class="text-lg font-semibold text-indigo-600 mb-1">💖 Buổi hẹn mới!</div>
+            <div class="font-medium">${data.title}</div>
+            <div class="text-sm text-gray-600 mt-1">${data.datetime}</div>
+            <div class="text-sm text-gray-700 mt-1">📍 ${data.location}</div>
+        `;
+
+        document.body.appendChild(box);
+
+        // Show animation
+        setTimeout(() => {
+            box.classList.add("show");
+        }, 50);
+
+        // Hide after 5s
+        setTimeout(() => {
+            box.classList.remove("show");
+            box.classList.add("hide");
+
+            setTimeout(() => box.remove(), 300);
+        }, 5000);
+    }
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let current = window.location.pathname; // ví dụ: "/memories"
+
+        document.querySelectorAll(".nav-btn").forEach(btn => {
+            if (btn.dataset.path === current) {
+                // Active (màu hồng)
+                btn.classList.add(
+                    "text-rose-600",
+                    "bg-rose-50"
+                );
+
+                // SVG đổi màu nếu có fill
+                let svg = btn.querySelector("svg");
+                if (svg) svg.classList.add("fill-rose-600");
+
+            } else {
+                // Inactive (màu xám)
+                btn.classList.add("text-gray-400", "hover:text-gray-600");
+
+                let svg = btn.querySelector("svg");
+                if (svg) svg.classList.remove("fill-rose-600");
+            }
+        });
+    });
+</script>
+
+<!-- Bottom padding to prevent content hiding behind nav -->
+<div class="h-20"></div>

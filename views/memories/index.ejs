@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Couple App - Memories</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script>
+        window.APP_USER = <%- JSON.stringify(session.user || null) %>;
+    </script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'shimmer': 'shimmer 2s linear infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @keyframes float {
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+        
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+        
+        .realtime-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -60%) scale(0.9);
+            background: white;
+            width: 80%;
+            max-width: 320px;
+            padding: 18px 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        /* Hiện lên */
+        
+        .realtime-popup.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        /* Ẩn đi */
+        
+        .realtime-popup.hide {
+            opacity: 0;
+            transform: translate(-50%, -40%) scale(0.9);
+        }
+        
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .photo-item {
+            aspect-ratio: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .photo-item:nth-child(3n) {
+            grid-column: span 2;
+            aspect-ratio: 2;
+        }
+        
+        .memory-card {
+            transition: all 0.3s ease;
+        }
+        
+        .memory-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .polaroid {
+            background: white;
+            padding: 8px 8px 40px 8px;
+            transform: rotate(-2deg);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+        
+        .polaroid:nth-child(even) {
+            transform: rotate(2deg);
+        }
+        
+        .polaroid:hover {
+            transform: rotate(0deg) scale(1.05);
+            z-index: 10;
+        }
+        
+        .diary-entry {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            position: relative;
+        }
+        
+        .diary-entry::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dc2626;
+        }
+        
+        .timeline-dot {
+            box-shadow: 0 0 0 4px white, 0 0 0 6px #f87171;
+        }
+        
+        .shimmer-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transform: translateX(-100%);
+        }
+        
+        .loading-shimmer .shimmer-overlay {
+            animation: shimmer 2s linear infinite;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-amber-50 to-rose-50 font-sans">
+
+    <!-- Header -->
+    <%- include('./components/header') %>
+
+        <!-- Tab Navigation -->
+        <%- include('./components/tab-navigation') %>
+            <!-- Shared Data -->
+            <%- include('./components/shared-data') %>
+
+                <!-- Shared Helpers -->
+                <%- include('./components/shared-helpers') %>
+                    <!-- Main Content -->
+                    <div class="max-w-md mx-auto px-4 pb-24">
+                        <!-- Album View -->
+                        <%- include('./components/album') %>
+
+                            <!-- Diary View -->
+                            <%- include('./components/diary') %>
+
+                                <!-- Timeline View -->
+                                <%- include('./components/timeline') %>
+                    </div>
+
+                    <!-- Modals -->
+                    <%- include('./components/modals') %>
+
+                        <!-- Footer -->
+                        <%- include('../layouts/footer') %>
+
+
+
+                            <!-- Main Scripts -->
+                            <%- include('./components/scripts') %>
+
+</body>
+
+</html>

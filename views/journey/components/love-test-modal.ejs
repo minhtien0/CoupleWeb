@@ -1,0 +1,43 @@
+<!-- Love Test Modal -->
+<div id="loveTestOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+    <div class="bg-white w-[90%] max-w-xl rounded-2xl shadow-lg p-6 animate-fadeIn max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-purple-700">Bài test Ngôn Ngữ Tình Yêu 💕</h2>
+            <button onclick="closeLoveTest()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+        </div>
+
+        <div class="w-full bg-gray-200 rounded-full h-2 mb-5">
+            <div id="testProgress" class="bg-purple-500 h-2 rounded-full" style="width: 8%;"></div>
+        </div>
+
+        <div id="loveTestQuestion" class="text-lg font-medium text-gray-800 mb-3"></div>
+
+        <div id="loveTestOptions" class="space-y-3"></div>
+
+        <div class="flex justify-between mt-6">
+            <button onclick="prevQuestion()" class="px-4 py-2 bg-gray-200 rounded-lg text-gray-700 hover:bg-gray-300">
+                ← Trước
+            </button>
+            <button onclick="nextQuestion()" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600">
+                Tiếp →
+            </button>
+        </div>
+
+        <button id="submitLoveTestBtn" onclick="<%= hasDoneTest ? 'updateLoveTest()' : 'submitLoveTest()' %>" class="mt-6 w-full bg-pink-500 text-white py-3 rounded-xl font-semibold hover:bg-pink-600">
+            <%= hasDoneTest ? 'Cập nhật kết quả ❤️' : 'Gửi kết quả ❤️' %>
+        </button>
+    </div>
+</div>
+
+<style>
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: scale(.95)
+        }
+        to {
+            opacity: 1;
+            transform: scale(1)
+        }
+    }
+</style>

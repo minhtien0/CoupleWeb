@@ -1,0 +1,25 @@
+<script>
+    // Initialize app when DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+        renderAlbums();
+        renderDiaries();
+        renderTimeline();
+        switchMemoryTab('album');
+
+        // Close overlay on click outside modal
+        const overlay = document.getElementById('overlay');
+        if (overlay) {
+            overlay.addEventListener('click', (e) => {
+                if (e.target.id === 'overlay') closeOverlay();
+            });
+        }
+
+        // Close lightbox on click outside
+        const lightbox = document.getElementById('lightbox');
+        if (lightbox) {
+            lightbox.addEventListener('click', (e) => {
+                if (e.target.id === 'lightbox') closeLightbox();
+            });
+        }
+    });
+</script>

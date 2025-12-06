@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Couple App - Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 3s infinite',
+                        'pulse-color': 'pulse-color 2s ease-in-out infinite alternate',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @keyframes pulse-color {
+            0% {
+                background: linear-gradient(135deg, #f97316, #ec4899);
+            }
+            100% {
+                background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+            }
+        }
+        
+        .profile-card {
+            transition: all 0.3s ease;
+        }
+        
+        .profile-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .skill-tag {
+            transition: all 0.2s ease;
+        }
+        
+        .skill-tag:hover {
+            transform: scale(1.05);
+        }
+        
+        .interest-icon {
+            transition: all 0.3s ease;
+        }
+        
+        .interest-icon:hover {
+            transform: rotate(10deg) scale(1.1);
+        }
+        
+        .avatar-container {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .avatar-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .avatar-container:hover .avatar-overlay {
+            opacity: 1;
+        }
+        
+        .personality-bar {
+            background: linear-gradient(90deg, var(--start-color), var(--end-color));
+            height: 6px;
+            border-radius: 3px;
+            transition: all 0.5s ease;
+        }
+        
+        .compatibility-ring {
+            stroke-dasharray: 251.2;
+            stroke-dashoffset: calc(251.2 - (251.2 * var(--compatibility) / 100));
+            transition: stroke-dashoffset 1s ease-in-out;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-emerald-50 to-cyan-50 font-sans">
+
+    <!-- Header -->
+    <div class="bg-white/80 backdrop-blur-sm border-b border-rose-100 sticky top-0 z-20">
+        <div class="max-w-md mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <button onclick="goBack()" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                        <svg class="w-5 h-5 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15,18 9,12 15,6"></polyline>
+                        </svg>
+                    </button>
+                    <div>
+                        <h1 class="text-lg font-semibold text-gray-800">Hồ sơ cá nhân</h1>
+                        <p class="text-sm text-gray-600">Chỉnh sửa thông tin</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="saveProfile()" class="px-4 py-2 bg-gradient-to-r from-emerald-400 to-cyan-400 text-white rounded-lg font-medium hover:shadow-lg transition-all">
+                        💾 Lưu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-md mx-auto px-4 py-6 space-y-6 pb-24">
+
+        <!-- Avatar & Basic Info -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="text-center mb-6">
+                <div class="avatar-container w-32 h-32 mx-auto mb-4 rounded-full">
+                    <div class="w-32 h-32 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full flex items-center justify-center">
+                        <span class="text-5xl">👩</span>
+                    </div>
+                    <div class="avatar-overlay rounded-full">
+                        <button onclick="changeAvatar()" class="text-white text-sm font-medium">
+                            📷 Đổi ảnh
+                        </button>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <input type="text" id="display-name" value="An" class="w-full text-center text-2xl font-bold text-gray-800 bg-transparent border-b-2 border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none transition-colors">
+                    </div>
+                    <div class="flex justify-center">
+                        <div class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-medium">
+                            ✨ Đang yêu
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="text-center p-3 bg-emerald-50 rounded-xl">
+                    <div class="text-lg font-bold text-emerald-600">23</div>
+                    <div class="text-xs text-gray-600">tuổi</div>
+                </div>
+                <div class="text-center p-3 bg-cyan-50 rounded-xl">
+                    <div class="text-lg font-bold text-cyan-600">108</div>
+                    <div class="text-xs text-gray-600">ngày yêu</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Basic Information -->
+        <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Thông tin cơ bản</h2>
+                <button onclick="toggleEdit('basic')" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
+                    ✏️ Sửa
+                </button>
+            </div>
+            <div class="space-y-4" id="basic-info">
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Sinh nhật</span>
+                    <input type="date" value="2001-03-15" class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Chiều cao</span>
+                    <input type="text" value="165 cm" class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none w-20 text-right">
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Cung hoàng đạo</span>
+                    <select class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
+                        <option>♓ Song Ngư</option>
+                        <option>♈ Bạch Dương</option>
+                        <option>♉ Kim Ngưu</option>
+                        <option>♊ Song Tử</option>
+                        <option>♋ Cự Giải</option>
+                        <option>♌ Sư Tử</option>
+                        <option>♍ Xử Nữ</option>
+                        <option>♎ Thiên Bình</option>
+                        <option>♏ Bọ Cạp</option>
+                        <option>♐ Nhân Mã</option>
+                        <option>♑ Ma Kết</option>
+                        <option>♒ Bảo Bình</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">MBTI</span>
+                    <select class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
+                        <option>INFP - Nhà trung gian</option>
+                        <option>INFJ - Nhà vận động</option>
+                        <option>INTJ - Kiến trúc sư</option>
+                        <option>INTP - Nhà tư tưởng</option>
+                        <option>ENFP - Nhà vận động</option>
+                        <option>ENFJ - Nhà lãnh đạo</option>
+                        <option>ENTJ - Chỉ huy quan</option>
+                        <option>ENTP - Nhà tranh luận</option>
+                        <option>ISFP - Nhà thám hiểm</option>
+                        <option>ISFJ - Nhà bảo vệ</option>
+                        <option>ISTJ - Nhà hậu cần</option>
+                        <option>ISTP - Nhà kỹ thuật</option>
+                        <option>ESFP - Nghệ sĩ</option>
+                        <option>ESFJ - Người thi hành</option>
+                        <option>ESTJ - Người điều hành</option>
+                        <option>ESTP - Doanh nhân</option>
+                    </select>
+                </div>
+                <div class="flex items-start justify-between">
+                    <span class="text-gray-600 mt-2">Địa chỉ</span>
+                    <textarea class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none resize-none w-40 text-right" rows="2">Quận 1, TP.HCM</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Education & Career -->
+        <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Học vấn & Sự nghiệp</h2>
+                <button onclick="toggleEdit('career')" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
+                    ✏️ Sửa
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div class="flex items-start space-x-3">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mt-1">
+                        <span class="text-lg">🎓</span>
+                    </div>
+                    <div class="flex-1">
+                        <input type="text" value="Đại học Kinh tế TP.HCM" class="w-full font-medium text-gray-800 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
+                        <input type="text" value="Cử nhân Quản trị Kinh doanh" class="w-full text-sm text-gray-600 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none mt-1">
+                        <input type="text" value="2019 - 2023" class="w-full text-xs text-gray-500 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none mt-1">
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3">
+                    <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center mt-1">
+                        <span class="text-lg">💼</span>
+                    </div>
+                    <div class="flex-1">
+                        <input type="text" value="Marketing Executive" class="w-full font-medium text-gray-800 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
+                        <input type="text" value="Công ty TNHH Digital Marketing ABC" class="w-full text-sm text-gray-600 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none mt-1">
+                        <input type="text" value="2023 - Hiện tại" class="w-full text-xs text-gray-500 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none mt-1">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skills & Talents -->
+        <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Kỹ năng & Tài năng</h2>
+                <button onclick="addSkill()" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
+                    ➕ Thêm
+                </button>
+            </div>
+            <div class="flex flex-wrap gap-2" id="skills-container">
+                <span class="skill-tag bg-rose-100 text-rose-700 px-3 py-2 rounded-full text-sm font-medium cursor-pointer">
+                    🎨 Thiết kế
+                </span>
+                <span class="skill-tag bg-blue-100 text-blue-700 px-3 py-2 rounded-full text-sm font-medium cursor-pointer">
+                    📱 Social Media
+                </span>
+                <span class="skill-tag bg-purple-100 text-purple-700 px-3 py-2 rounded-full text-sm font-medium cursor-pointer">
+                    🎵 Hát
+                </span>
+                <span class="skill-tag bg-emerald-100 text-emerald-700 px-3 py-2 rounded-full text-sm font-medium cursor-pointer">
+                    👩‍🍳 Nấu ăn
+                </span>
+                <span class="skill-tag bg-amber-100 text-amber-700 px-3 py-2 rounded-full text-sm font-medium cursor-pointer">
+                    📸 Chụp ảnh
+                </span>
+                <span class="skill-tag bg-cyan-100 text-cyan-700 px-3 py-2 rounded-full text-sm font-medium cursor-pointer">
+                    💬 Tiếng Anh
+                </span>
+            </div>
+        </div>
+
+        <!-- Interests & Hobbies -->
+        <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Sở thích</h2>
+                <button onclick="addInterest()" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
+                    ➕ Thêm
+                </button>
+            </div>
+            <div class="grid grid-cols-4 gap-4" id="interests-container">
+                <div class="text-center">
+                    <div class="interest-icon w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
+                        <span class="text-xl">📚</span>
+                    </div>
+                    <span class="text-xs text-gray-600">Đọc sách</span>
+                </div>
+                <div class="text-center">
+                    <div class="interest-icon w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
+                        <span class="text-xl">🎬</span>
+                    </div>
+                    <span class="text-xs text-gray-600">Phim ảnh</span>
+                </div>
+                <div class="text-center">
+                    <div class="interest-icon w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
+                        <span class="text-xl">🧘</span>
+                    </div>
+                    <span class="text-xs text-gray-600">Yoga</span>
+                </div>
+                <div class="text-center">
+                    <div class="interest-icon w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
+                        <span class="text-xl">🎵</span>
+                    </div>
+                    <span class="text-xs text-gray-600">Âm nhạc</span>
+                </div>
+                <div class="text-center">
+                    <div class="interest-icon w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
+                        <span class="text-xl">☕</span>
+                    </div>
+                    <span class="text-xs text-gray-600">Café</span>
+                </div>
+                <div class="text-center">
+                    <div class="interest-icon w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
+                        <span class="text-xl">✈️</span>
+                    </div>
+                    <span class="text-xs text-gray-600">Du lịch</span>
+                </div>
+                <div class="text-center">
+                    <div class="interest-icon w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
+                        <span class="text-xl">💄</span>
+                    </div>
+                    <span class="text-xs text-gray-600">Làm đẹp</span>
+                </div>
+                <div class="text-center">
+                    <div class="interest-icon w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
+                        <span class="text-xl">🛍️</span>
+                    </div>
+                    <span class="text-xs text-gray-600">Mua sắm</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personality Traits -->
+        <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Tính cách</h2>
+                <button onclick="takePersonalityTest()" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
+                    📊 Test tính cách
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Hướng ngoại</span>
+                    <div class="flex-1 mx-4">
+                        <div class="personality-bar w-full" style="--start-color: #fbbf24; --end-color: #f59e0b; width: 75%"></div>
+                    </div>
+                    <span class="text-sm text-gray-600">Hướng nội</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Cảm tính</span>
+                    <div class="flex-1 mx-4">
+                        <div class="personality-bar w-full" style="--start-color: #f87171; --end-color: #ef4444; width: 60%"></div>
+                    </div>
+                    <span class="text-sm text-gray-600">Lý tính</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Tự phát</span>
+                    <div class="flex-1 mx-4">
+                        <div class="personality-bar w-full" style="--start-color: #34d399; --end-color: #10b981; width: 80%"></div>
+                    </div>
+                    <span class="text-sm text-gray-600">Có kế hoạch</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Thực tế</span>
+                    <div class="flex-1 mx-4">
+                        <div class="personality-bar w-full" style="--start-color: #a78bfa; --end-color: #8b5cf6; width: 45%"></div>
+                    </div>
+                    <span class="text-sm text-gray-600">Tưởng tượng</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lifestyle Preferences -->
+        <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Lối sống</h2>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Thức dậy</span>
+                    <input type="time" value="07:00" class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Đi ngủ</span>
+                    <input type="time" value="23:30" class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Tập thể dục</span>
+                    <select class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
+                        <option>3-4 lần/tuần</option>
+                        <option>Hàng ngày</option>
+                        <option>1-2 lần/tuần</option>
+                        <option>Thỉnh thoảng</option>
+                        <option>Không bao giờ</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Ăn uống</span>
+                    <select class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
+                        <option>Ăn chay thỉnh thoảng</option>
+                        <option>Ăn chay hoàn toàn</option>
+                        <option>Ăn tất cả</option>
+                        <option>Ăn kiêng Keto</option>
+                        <option>Ăn clean</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Hút thuốc</span>
+                    <select class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
+                        <option>Không bao giờ</option>
+                        <option>Thỉnh thoảng</option>
+                        <option>Xã giao</option>
+                        <option>Thường xuyên</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Uống rượu</span>
+                    <select class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
+                        <option>Xã giao</option>
+                        <option>Không bao giờ</option>
+                        <option>Thỉnh thoảng</option>
+                        <option>Cuối tuần</option>
+                        <option>Thường xuyên</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compatibility Score -->
+        <div class="bg-gradient-to-br from-pink-100 to-purple-100 rounded-2xl p-6 shadow-sm border border-rose-200">
+            <div class="text-center mb-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-2">Độ tương thích</h2>
+                <p class="text-sm text-gray-600">Với Minh</p>
+            </div>
+            <div class="flex items-center justify-center mb-4">
+                <div class="relative">
+                    <svg class="w-32 h-32 transform -rotate-90">
+                        <circle cx="64" cy="64" r="40" stroke="#e5e7eb" stroke-width="6" fill="none" />
+                        <circle cx="64" cy="64" r="40" stroke="url(#gradient)" stroke-width="6" fill="none" 
+                                stroke-linecap="round" class="compatibility-ring" style="--compatibility: 87" />
+                        <defs>
+                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#f97316"/>
+                                <stop offset="100%" style="stop-color:#ec4899"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <span class="text-2xl font-bold text-gray-800">87%</span>
+                        <span class="text-xs text-gray-500">Tương thích</span>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 text-center">
+                <div>
+                    <div class="text-lg font-bold text-emerald-600">92%</div>
+                    <div class="text-xs text-gray-600">Sở thích</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-blue-600">85%</div>
+                    <div class="text-xs text-gray-600">Lối sống</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-purple-600">89%</div>
+                    <div class="text-xs text-gray-600">Tính cách</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-rose-600">83%</div>
+                    <div class="text-xs text-gray-600">Mục tiêu</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Me -->
+        <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Về bản thân</h2>
+                <button onclick="toggleEdit('about')" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
+                    ✏️ Sửa
+                </button>
+            </div>
+            <textarea id="about-me" class="w-full p-4 bg-gray-50 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none resize-none transition-colors" rows="6" placeholder="Viết vài dòng về bản thân...">Mình là một người yêu thích khám phá những điều mới mẻ và luôn tìm kiếm sự cân bằng trong cuộc sống. Công việc marketing giúp mình phát huy tính sáng tạo, còn thời gian rảnh thì mình thích đọc sách, nghe nhạc và thử những món ăn mới.
+
+Mình tin rằng tình yêu là hành trình cùng nhau trưởng thành và chia sẻ những khoảnh khắc đẹp. Hy vọng chúng ta sẽ cùng tạo ra nhiều kỷ niệm đáng nhớ! 💕</textarea>
+        </div>
+
+        <!-- Goals & Dreams -->
+        <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Mục tiêu & Ước mơ</h2>
+                <button onclick="addGoal()" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
+                    ➕ Thêm
+                </button>
+            </div>
+            <div class="space-y-4" id="goals-container">
+                <div class="flex items-start space-x-3 p-3 bg-rose-50 rounded-xl">
+                    <div class="w-8 h-8 bg-rose-200 rounded-lg flex items-center justify-center mt-1">
+                        <span class="text-sm">💕</span>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-medium text-gray-800">Tình cảm</h4>
+                        <p class="text-sm text-gray-600">Xây dựng mối quan hệ bền vững, hiểu nhau sâu sắc</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3 p-3 bg-emerald-50 rounded-xl">
+                    <div class="w-8 h-8 bg-emerald-200 rounded-lg flex items-center justify-center mt-1">
+                        <span class="text-sm">🏠</span>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-medium text-gray-800">Gia đình</h4>
+                        <p class="text-sm text-gray-600">Có nhà riêng và gia đình nhỏ hạnh phúc trong 5 năm tới</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3 p-3 bg-blue-50 rounded-xl">
+                    <div class="w-8 h-8 bg-blue-200 rounded-lg flex items-center justify-center mt-1">
+                        <span class="text-sm">🚀</span>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-medium text-gray-800">Sự nghiệp</h4>
+                        <p class="text-sm text-gray-600">Trở thành Marketing Manager trong 2 năm tới</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3 p-3 bg-purple-50 rounded-xl">
+                    <div class="w-8 h-8 bg-purple-200 rounded-lg flex items-center justify-center mt-1">
+                        <span class="text-sm">✈️</span>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-medium text-gray-800">Du lịch</h4>
+                        <p class="text-sm text-gray-600">Khám phá 10 quốc gia cùng người yêu</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Questions for Partner -->
+        <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Câu hỏi cho người yêu</h2>
+                <button onclick="addQuestion()" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
+                    ➕ Thêm
+                </button>
+            </div>
+            <div class="space-y-3" id="questions-container">
+                <div class="p-4 bg-gradient-to-r from-rose-50 to-pink-50 rounded-xl border-l-4 border-rose-400">
+                    <p class="text-sm text-gray-700 font-medium">Điều gì khiến anh cảm thấy hạnh phúc nhất?</p>
+                    <p class="text-xs text-gray-500 mt-1">Câu hỏi về cảm xúc</p>
+                </div>
+
+                <div class="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border-l-4 border-blue-400">
+                    <p class="text-sm text-gray-700 font-medium">Anh mong muốn chúng ta sẽ như thế nào trong 5 năm tới?</p>
+                    <p class="text-xs text-gray-500 mt-1">Câu hỏi về tương lai</p>
+                </div>
+
+                <div class="p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border-l-4 border-emerald-400">
+                    <p class="text-sm text-gray-700 font-medium">Sở thích nào của anh mà em chưa biết?</p>
+                    <p class="text-xs text-gray-500 mt-1">Câu hỏi tìm hiểu</p>
+                </div>
+
+                <div class="p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl border-l-4 border-purple-400">
+                    <p class="text-sm text-gray-700 font-medium">Anh có muốn cùng em học một kỹ năng mới không?</p>
+                    <p class="text-xs text-gray-500 mt-1">Câu hỏi hoạt động chung</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Skill Modal -->
+    <div id="skill-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 hidden">
+        <div class="flex items-end sm:items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md transform transition-all">
+                <div class="p-6 border-b border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-800">Thêm kỹ năng</h3>
+                        <button onclick="closeSkillModal()" class="p-2 text-gray-400 hover:text-gray-600">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tên kỹ năng</label>
+                        <input type="text" id="skill-name" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="VD: Lập trình, Guitar...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Mức độ thành thạo</label>
+                        <select id="skill-level" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                            <option>Mới học</option>
+                            <option>Cơ bản</option>
+                            <option>Trung bình</option>
+                            <option>Khá giỏi</option>
+                            <option>Chuyên nghiệp</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="p-6 border-t border-gray-100">
+                    <div class="flex space-x-3">
+                        <button onclick="closeSkillModal()" class="flex-1 py-3 px-4 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                            Hủy
+                        </button>
+                        <button onclick="addNewSkill()" class="flex-1 py-3 px-4 bg-gradient-to-r from-emerald-400 to-cyan-400 text-white rounded-xl font-medium hover:shadow-lg transition-all">
+                            Thêm kỹ năng
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State variables
+        let editMode = {
+            basic: false,
+            career: false,
+            about: false
+        };
+
+        let skills = [
+            'Thiết kế', 'Social Media', 'Hát', 'Nấu ăn', 'Chụp ảnh', 'Tiếng Anh'
+        ];
+
+        let interests = [
+            'Đọc sách', 'Phim ảnh', 'Yoga', 'Âm nhạc', 'Café', 'Du lịch', 'Làm đẹp', 'Mua sắm'
+        ];
+
+        // Navigation functions
+        function goBack() {
+            // In a real app, this would navigate back to the previous page
+            alert('Quay lại trang trước');
+        }
+
+        function saveProfile() {
+            // Collect all form data and save
+            const profileData = {
+                displayName: document.getElementById('display-name').value,
+                aboutMe: document.getElementById('about-me').value,
+                // ... other fields
+            };
+
+            // Show success message
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = '✅ Đã lưu!';
+            button.disabled = true;
+
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+                alert('Hồ sơ đã được cập nhật thành công! 🎉');
+            }, 1500);
+        }
+
+        // Avatar functions
+        function changeAvatar() {
+            // In a real app, this would open file picker or camera
+            const avatars = ['👩', '👩‍💼', '👩‍🎓', '👩‍💻', '👩‍🎨', '👩‍🍳', '🙋‍♀️', '💃'];
+            const currentAvatar = document.querySelector('.avatar-container span');
+            const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
+            currentAvatar.textContent = randomAvatar;
+
+            // Show feedback
+            alert(`Avatar đã được thay đổi thành ${randomAvatar}! 📸`);
+        }
+
+        // Edit mode toggles
+        function toggleEdit(section) {
+            editMode[section] = !editMode[section];
+            const button = event.target;
+
+            if (editMode[section]) {
+                button.textContent = '💾 Lưu';
+                button.classList.add('bg-emerald-100');
+            } else {
+                button.textContent = '✏️ Sửa';
+                button.classList.remove('bg-emerald-100');
+                // Save changes here
+                alert(`Đã lưu thay đổi cho phần ${section}!`);
+            }
+        }
+
+        // Skills management
+        function addSkill() {
+            document.getElementById('skill-modal').classList.remove('hidden');
+        }
+
+        function closeSkillModal() {
+            document.getElementById('skill-modal').classList.add('hidden');
+            document.getElementById('skill-name').value = '';
+            document.getElementById('skill-level').selectedIndex = 0;
+        }
+
+        function addNewSkill() {
+            const skillName = document.getElementById('skill-name').value;
+            const skillLevel = document.getElementById('skill-level').value;
+
+            if (!skillName.trim()) {
+                alert('Vui lòng nhập tên kỹ năng!');
+                return;
+            }
+
+            // Create new skill tag
+            const skillsContainer = document.getElementById('skills-container');
+            const skillTag = document.createElement('span');
+            skillTag.className = 'skill-tag bg-indigo-100 text-indigo-700 px-3 py-2 rounded-full text-sm font-medium cursor-pointer';
+            skillTag.innerHTML = `🆕 ${skillName}`;
+
+            // Add click to remove functionality
+            skillTag.addEventListener('click', () => {
+                if (confirm('Xóa kỹ năng này?')) {
+                    skillTag.remove();
+                }
+            });
+
+            skillsContainer.appendChild(skillTag);
+            skills.push(skillName);
+
+            // Show success and close modal
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '✅ Đã thêm!';
+            button.disabled = true;
+
+            setTimeout(() => {
+                closeSkillModal();
+                button.textContent = originalText;
+                button.disabled = false;
+            }, 1000);
+        }
+
+        // Interests management  
+        function addInterest() {
+            const newInterests = [{
+                icon: '🎮',
+                name: 'Game'
+            }, {
+                icon: '🏊‍♀️',
+                name: 'Bơi lội'
+            }, {
+                icon: '🎯',
+                name: 'Bắn cung'
+            }, {
+                icon: '🎸',
+                name: 'Nhạc cụ'
+            }, {
+                icon: '🍳',
+                name: 'Nướng bánh'
+            }, {
+                icon: '🧵',
+                name: 'Thêu'
+            }, {
+                icon: '🌱',
+                name: 'Trồng cây'
+            }, {
+                icon: '📱',
+                name: 'Công nghệ'
+            }];
+
+            const randomInterest = newInterests[Math.floor(Math.random() * newInterests.length)];
+            const interestsContainer = document.getElementById('interests-container');
+
+            const interestDiv = document.createElement('div');
+            interestDiv.className = 'text-center';
+            interestDiv.innerHTML = `
+                <div class="interest-icon w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
+                    <span class="text-xl">${randomInterest.icon}</span>
+                </div>
+                <span class="text-xs text-gray-600">${randomInterest.name}</span>
+            `;
+
+            interestsContainer.appendChild(interestDiv);
+            alert(`Đã thêm sở thích "${randomInterest.name}"! ${randomInterest.icon}`);
+        }
+
+        // Goals management
+        function addGoal() {
+            const goalTypes = [{
+                icon: '🎓',
+                title: 'Học tập',
+                desc: 'Học một kỹ năng mới hoặc lấy chứng chỉ',
+                bg: 'bg-blue-50',
+                iconBg: 'bg-blue-200'
+            }, {
+                icon: '💪',
+                title: 'Sức khỏe',
+                desc: 'Duy trì lối sống khỏe mạnh và tích cực',
+                bg: 'bg-green-50',
+                iconBg: 'bg-green-200'
+            }, {
+                icon: '💰',
+                title: 'Tài chính',
+                desc: 'Tiết kiệm và đầu tư cho tương lai',
+                bg: 'bg-yellow-50',
+                iconBg: 'bg-yellow-200'
+            }, {
+                icon: '🎨',
+                title: 'Sáng tạo',
+                desc: 'Phát triển khả năng nghệ thuật và sáng tạo',
+                bg: 'bg-purple-50',
+                iconBg: 'bg-purple-200'
+            }];
+
+            const randomGoal = goalTypes[Math.floor(Math.random() * goalTypes.length)];
+            const goalsContainer = document.getElementById('goals-container');
+
+            const goalDiv = document.createElement('div');
+            goalDiv.className = `flex items-start space-x-3 p-3 ${randomGoal.bg} rounded-xl`;
+            goalDiv.innerHTML = `
+                <div class="w-8 h-8 ${randomGoal.iconBg} rounded-lg flex items-center justify-center mt-1">
+                    <span class="text-sm">${randomGoal.icon}</span>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-medium text-gray-800">${randomGoal.title}</h4>
+                    <p class="text-sm text-gray-600">${randomGoal.desc}</p>
+                </div>
+            `;
+
+            goalsContainer.appendChild(goalDiv);
+            alert(`Đã thêm mục tiêu "${randomGoal.title}"! 🎯`);
+        }
+
+        // Questions management
+        function addQuestion() {
+            const questionTypes = [{
+                question: 'Kỷ niệm đẹp nhất của anh là gì?',
+                type: 'Câu hỏi về ký ức',
+                color: 'rose'
+            }, {
+                question: 'Anh có sợ điều gì không?',
+                type: 'Câu hỏi cá nhân',
+                color: 'blue'
+            }, {
+                question: 'Món ăn yêu thích của anh là gì?',
+                type: 'Câu hỏi sinh hoạt',
+                color: 'emerald'
+            }, {
+                question: 'Anh muốn được tặng quà gì nhất?',
+                type: 'Câu hỏi mong muốn',
+                color: 'purple'
+            }];
+
+            const randomQ = questionTypes[Math.floor(Math.random() * questionTypes.length)];
+            const questionsContainer = document.getElementById('questions-container');
+
+            const questionDiv = document.createElement('div');
+            questionDiv.className = `p-4 bg-gradient-to-r from-${randomQ.color}-50 to-${randomQ.color}-50 rounded-xl border-l-4 border-${randomQ.color}-400`;
+            questionDiv.innerHTML = `
+                <p class="text-sm text-gray-700 font-medium">${randomQ.question}</p>
+                <p class="text-xs text-gray-500 mt-1">${randomQ.type}</p>
+            `;
+
+            questionsContainer.appendChild(questionDiv);
+            alert(`Đã thêm câu hỏi mới! 💭`);
+        }
+
+        // Personality test
+        function takePersonalityTest() {
+            alert('Bài test tính cách Big 5:\n\n🔍 20 câu hỏi tâm lý học\n📊 Phân tích chi tiết 5 khía cạnh\n💡 Gợi ý cải thiện\n❤️ So sánh với người yêu\n\n Bạn có muốn bắt đầu không?');
+        }
+
+        // Interactive elements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click handlers for skill tags (remove functionality)
+            const skillTags = document.querySelectorAll('.skill-tag');
+            skillTags.forEach(tag => {
+                tag.addEventListener('click', () => {
+                    if (confirm('Xóa kỹ năng này khỏi hồ sơ?')) {
+                        tag.remove();
+                    }
+                });
+            });
+
+            // Add click handlers for interest icons (highlight functionality)  
+            const interestIcons = document.querySelectorAll('.interest-icon');
+            interestIcons.forEach(icon => {
+                icon.addEventListener('click', () => {
+                    icon.classList.toggle('ring-2');
+                    icon.classList.toggle('ring-emerald-400');
+                    icon.classList.toggle('ring-offset-2');
+                });
+            });
+
+            // Auto-save functionality for inputs
+            const inputs = document.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                input.addEventListener('change', () => {
+                    // Show subtle save indicator
+                    input.classList.add('ring-1', 'ring-emerald-300');
+                    setTimeout(() => {
+                        input.classList.remove('ring-1', 'ring-emerald-300');
+                    }, 1000);
+                });
+            });
+
+            // Initialize compatibility ring animation
+            setTimeout(() => {
+                const ring = document.querySelector('.compatibility-ring');
+                if (ring) {
+                    ring.style.strokeDashoffset = 'calc(251.2 - (251.2 * 87 / 100))';
+                }
+            }, 500);
+        });
+
+        // Profile validation
+        function validateProfile() {
+            const required = ['display-name', 'about-me'];
+            let isValid = true;
+
+            required.forEach(id => {
+                const element = document.getElementById(id);
+                if (!element.value.trim()) {
+                    element.classList.add('border-red-500');
+                    isValid = false;
+                } else {
+                    element.classList.remove('border-red-500');
+                }
+            });
+
+            return isValid;
+        }
+
+        // Profile completion percentage
+        function calculateCompletion() {
+            const fields = [
+                'display-name', 'about-me', 'birthday', 'height', 'zodiac', 'mbti'
+            ];
+
+            let completed = 0;
+            fields.forEach(id => {
+                const element = document.getElementById(id);
+                if (element && element.value.trim()) {
+                    completed++;
+                }
+            });
+
+            const percentage = Math.round((completed / fields.length) * 100);
+            console.log(`Profile completion: ${percentage}%`);
+            return percentage;
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            calculateCompletion();
+
+            // Add smooth scrolling for better UX
+            document.documentElement.style.scrollBehavior = 'smooth';
+
+            // Show completion status
+            setTimeout(() => {
+                const completion = calculateCompletion();
+                if (completion < 80) {
+                    console.log(`Hoàn thành thêm ${100 - completion}% để có hồ sơ đầy đủ!`);
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+
+</html>

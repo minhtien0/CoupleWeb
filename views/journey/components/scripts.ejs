@@ -1,0 +1,315 @@
+<script>
+    // ==================== LOVE TEST ====================
+    const loveQuestions = [{
+        topic: "quality_time",
+        q: "Bạn thích nhất khi cả hai cùng dành thời gian riêng cho nhau?"
+    }, {
+        topic: "quality_time",
+        q: "Bạn cảm thấy hạnh phúc khi được trò chuyện và kết nối?"
+    }, {
+        topic: "quality_time",
+        q: "Bạn thích những buổi hẹn chỉ có hai người?"
+    }, {
+        topic: "acts_of_service",
+        q: "Bạn cảm động khi nửa kia giúp bạn làm việc nhà?"
+    }, {
+        topic: "acts_of_service",
+        q: "Bạn thích được hỗ trợ khi mệt mỏi?"
+    }, {
+        topic: "acts_of_service",
+        q: "Bạn rất trân trọng những hành động quan tâm nhỏ?"
+    }, {
+        topic: "words_of_affirmation",
+        q: "Bạn thích nghe lời khen từ đối phương?"
+    }, {
+        topic: "words_of_affirmation",
+        q: "Bạn thấy vui khi được động viên tinh thần?"
+    }, {
+        topic: "words_of_affirmation",
+        q: "Bạn thích những tin nhắn yêu thương?"
+    }, {
+        topic: "physical_touch",
+        q: "Bạn thích những cái ôm bất ngờ?"
+    }, {
+        topic: "physical_touch",
+        q: "Bạn cảm thấy an toàn khi được nắm tay?"
+    }, {
+        topic: "physical_touch",
+        q: "Bạn thích sự gần gũi về mặt thể xác?"
+    }];
+
+    let loveTestIndex = 0;
+    let loveTestAnswers = [];
+
+    function getLoveTestData() {
+        let result = {
+            quality_time: 0,
+            acts_of_service: 0,
+            words_of_affirmation: 0,
+            physical_touch: 0
+        };
+
+        loveQuestions.forEach((q, i) => {
+            result[q.topic] += loveTestAnswers[i] || 0;
+        });
+
+        return result;
+    }
+
+    function openLoveTest() {
+        document.getElementById("loveTestOverlay").classList.remove("hidden");
+        loadLoveQuestion();
+    }
+
+    function closeLoveTest() {
+        document.getElementById("loveTestOverlay").classList.add("hidden");
+    }
+
+    function loadLoveQuestion() {
+        const q = loveQuestions[loveTestIndex];
+        document.getElementById("loveTestQuestion").innerText = (loveTestIndex + 1) + ". " + q.q;
+
+        document.getElementById("loveTestOptions").innerHTML = `
+            <label class="flex items-center space-x-3">
+                <input type="radio" name="answer" value="1" class="w-4 h-4">
+                <span>Hoàn toàn đúng</span>
+            </label>
+            <label class="flex items-center space-x-3">
+                <input type="radio" name="answer" value="0" class="w-4 h-4">
+                <span>Không hẳn</span>
+            </label>
+        `;
+
+        if (loveTestAnswers[loveTestIndex] !== undefined) {
+            document.querySelector(`input[value="${loveTestAnswers[loveTestIndex]}"]`).checked = true;
+        }
+
+        document.getElementById("testProgress").style.width = ((loveTestIndex + 1) / 12) * 100 + "%";
+        document.getElementById("submitLoveTestBtn").classList.toggle("hidden", loveTestIndex !== 11);
+    }
+
+    function nextQuestion() {
+        const selected = document.querySelector("input[name='answer']:checked");
+        if (!selected) return alert("Hãy chọn một đáp án!");
+
+        loveTestAnswers[loveTestIndex] = Number(selected.value);
+
+        if (loveTestIndex < loveQuestions.length - 1) {
+            loveTestIndex++;
+            loadLoveQuestion();
+        }
+    }
+
+    function prevQuestion() {
+        if (loveTestIndex > 0) {
+            loveTestIndex--;
+            loadLoveQuestion();
+        }
+    }
+
+    async function submitLoveTest() {
+        const result = getLoveTestData();
+
+        const res = await fetch("/journey/love-language/save", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(result)
+        });
+
+        const data = await res.json();
+        alert("Đã lưu kết quả thành công!");
+        closeLoveTest();
+    }
+
+    function updateLoveTest() {
+        const data = getLoveTestData();
+
+        fetch("/journey/love-language/update", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(result => {
+                alert(result.message);
+                location.reload();
+            });
+    }
+
+    // ==================== GOALS ====================
+    function openGoalDetail(id) {
+        fetch(`/journey/goals/${id}`)
+            .then(res => res.json())
+            .then(data => {
+                    const g = data.goal;
+
+                    document.getElementById("g-title").innerText = g.title;
+                    document.getElementById("g-desc").innerText = g.description;
+                    document.getElementById("g-date").innerText = `Bắt đầu: ${g.start_date}`;
+                    document.getElementById("e-date").innerText = `Kết thúc: ${g.end_date}`;
+
+                    let percent = Math.round((g.current_value / g.target_value) * 100);
+
+                    document.getElementById("g-progress-text").innerText =
+                        `${g.current_value} / ${g.target_value} (${percent}%)`;
+                    document.getElementById("g-progress-bar").style.width = percent + "%";
+
+                    let html = "";
+                    data.logs.forEach(log => {
+                                html += `
+                        <div class="border-b py-2">
+                            <p class="text-sm">📅 ${log.time}</p>
+                            ${log.image ? `<img src="/uploads/goals/${log.image}" class="w-20 rounded mt-1">` : ""}
+                            <p class="text-xs text-gray-600">${log.note || ""}</p>
+                        </div>`;
+                });
+
+                document.getElementById("g-logs").innerHTML = html || "Chưa có nhật ký nào";
+                document.getElementById("checkin-goal-id").value = id;
+                document.getElementById("goal-detail-modal").classList.remove("hidden");
+            });
+    }
+
+    function closeGoalDetail() {
+        document.getElementById("goal-detail-modal").classList.add("hidden");
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const checkinForm = document.getElementById("checkin-form");
+        if (checkinForm) {
+            checkinForm.onsubmit = async (e) => {
+                e.preventDefault();
+                let formData = new FormData(e.target);
+
+                let res = await fetch("/journey/goals/checkin", {
+                    method: "POST",
+                    body: formData
+                });
+
+                let data = await res.json();
+
+                if (data.success) {
+                    alert("Điểm danh thành công!");
+                    closeGoalDetail();
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            };
+        }
+    });
+
+    function addNewGoal() {
+        document.getElementById('goal-modal').classList.remove('hidden');
+    }
+
+    function closeGoalModal() {
+        document.getElementById('goal-modal').classList.add('hidden');
+        document.getElementById('goal-title').value = '';
+        document.getElementById('goal-description').value = '';
+    }
+
+    async function createGoal() {
+        const title = document.getElementById("goal-title").value.trim();
+        const description = document.getElementById("goal-description").value.trim();
+        const icon = document.getElementById("goal-icon").value;
+        const target = document.getElementById("goal-target").value;
+        const start = document.getElementById("goal-start").value;
+        const end = document.getElementById("goal-end").value;
+
+        if (!title || !target) {
+            alert("Vui lòng nhập tên và giá trị mục tiêu!");
+            return;
+        }
+
+        try {
+            const res = await fetch("/journey/goals/create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title,
+                    description,
+                    icon,
+                    target_value: target,
+                    start_date: start,
+                    end_date: end
+                })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                alert("❌ " + data.error);
+                return;
+            }
+
+            alert("🎉 " + data.message);
+            closeGoalModal();
+            location.reload();
+
+        } catch (error) {
+            console.error(error);
+            alert("Lỗi kết nối server!");
+        }
+    }
+
+    // ==================== MILESTONES ====================
+    function addMilestone() {
+        document.getElementById("milestone-modal").classList.remove("hidden");
+    }
+
+    function closeMilestoneModal() {
+        document.getElementById("milestone-modal").classList.add("hidden");
+    }
+
+    async function createMilestone() {
+        const title = document.getElementById("ms-title").value.trim();
+        const description = document.getElementById("ms-description").value.trim();
+        const location = document.getElementById("ms-location").value.trim();
+        const event_date = document.getElementById("ms-date").value;
+
+        if (!title || !event_date) {
+            return alert("Vui lòng nhập đầy đủ tiêu đề và ngày!");
+        }
+
+        const res = await fetch("/journey/milestone/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title,
+                description,
+                location,
+                event_date
+            })
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+            return alert(data.message || "Lỗi không xác định!");
+        }
+
+        alert("Đã thêm mốc thành công!");
+        closeMilestoneModal();
+        location.reload();
+    }
+
+    // ==================== STREAK ====================
+    document.addEventListener('DOMContentLoaded', function() {
+        updateStreakDisplay();
+    });
+
+    function updateStreakDisplay() {
+        const currentStreak = <%- JSON.stringify(coupleInfo.current_streak)%>;
+        const bestStreak = <%- JSON.stringify(coupleInfo.max_streak)%>;
+        const progressPercent = (currentStreak / bestStreak) * 100;
+        const progressBar = document.querySelector('.progress-bar');
+        if (progressBar) {
+            progressBar.style.setProperty('--progress', progressPercent);
+        }
+    }
+</script>

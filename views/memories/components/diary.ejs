@@ -1,0 +1,143 @@
+<!-- Diary View -->
+<div id="diary-view" class="space-y-6 hidden">
+    <!-- Stats -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gray-800">Nhật ký tình yêu</h2>
+            <div class="animate-float">📖</div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="text-center">
+                <div id="stat-posts" class="text-2xl font-bold text-amber-600">23</div>
+                <div class="text-xs text-gray-500">Bài viết</div>
+            </div>
+            <div class="text-center">
+                <%
+                            function formatDateVN(dateStr) {
+                                if (!dateStr) return '';
+                                const d = new Date(dateStr);
+                                if (isNaN(d)) return dateStr;
+                                const dd = String(d.getDate()).padStart(2, '0');
+                                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                                const yyyy = d.getFullYear();
+                                return `${dd}/${mm}/${yyyy}`;
+                            }
+                            const start = new Date(coupleInfo.started_at_couple);
+                            const today = new Date();
+                            const diff = Math.floor((today - start) / (1000*60*60*24));
+                            %>
+                    <div id="stat-days" class="text-2xl font-bold text-rose-600">
+                        <%=diff%>
+                    </div>
+                    <div class="text-xs text-gray-500">Ngày yêu</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Diary Entries -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <h3 class="font-semibold text-gray-800">Gần đây</h3>
+            <button onclick="writeDiary()" class="text-sm text-amber-600 hover:text-amber-700 font-medium">✍️ Viết mới</button>
+        </div>
+        <div id="diary-entries-list" class="space-y-4"></div>
+    </div>
+</div>
+
+<script>
+    // ==================== DIARY SCRIPTS ====================
+    function renderDiaries() {
+        const container = document.getElementById('diary-entries-list');
+        container.innerHTML = '';
+        diaries.forEach(d => {
+            const card = document.createElement('div');
+            card.className = 'diary-entry rounded-2xl p-6 shadow-sm border border-amber-200 memory-card';
+            card.innerHTML = `
+                <div class="flex items-start space-x-4">
+                    <div class="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center">
+                        <span class="text-lg color-blue-500"><i class="fa-solid fa-user-tie"></i></span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <h4 class="font-medium text-gray-800">${d.author}</h4>
+                            <span class="text-xs text-gray-500">• ${relativeTime(d.when)}</span>
+                        </div>
+                        <h5 class="font-medium text-gray-700 mb-2">${d.title}</h5>
+                        <p class="text-sm text-gray-600 mb-3 leading-relaxed">${d.content}</p>
+                        <div class="flex items-center space-x-3">
+                            <button class="flex items-center space-x-1 text-rose-500 hover:text-rose-600">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                </svg>
+                                <span class="text-xs">02</span>
+                            </button>
+                            <button class="flex items-center space-x-1 text-gray-400 hover:text-gray-600">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"></path>
+                                </svg>
+                                <span class="text-xs">04</span>
+                            </button>
+                            <div class="flex -space-x-1">
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+
+        document.getElementById('stat-posts').textContent = diaries.length;
+    }
+
+    async function submitDiary() {
+        const payload = {
+            title: document.getElementById("diary-title").value,
+            content: document.getElementById("diary-content").value,
+            date_time: document.getElementById("diary-date").value
+        };
+
+        const res = await fetch("/memories/create/diary", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            alert("Đã thêm nhật kí!");
+            location.reload();
+        } else {
+            alert("Thêm thất bại!");
+        }
+
+        renderDiaries();
+    }
+
+    function writeDiary() {
+        const html = `
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">Viết nhật ký mới</h3>
+                    <button onclick="closeOverlay()" class="text-gray-400">Đóng</button>
+                </div>
+                <div class="space-y-3">
+                    <label class="block text-sm">Tiêu đề</label>
+                    <input id="diary-title" class="w-full rounded-md border p-2">
+                    <label class="block text-sm">Nội dung</label>
+                    <textarea id="diary-content" class="w-full rounded-md border p-2" rows="6"></textarea>
+                    <label class="block text-sm">Ngày</label>
+                    <input id="diary-date" type="date" class="w-full rounded-md border p-2" value="${new Date().toISOString().slice(0, 10)}">
+                    <div class="flex justify-end space-x-2">
+                        <button onclick="closeOverlay()" class="px-4 py-2 rounded-md bg-gray-100">Hủy</button>
+                        <button onclick="submitDiary()" class="px-4 py-2 rounded-md bg-amber-400 text-white">Lưu</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        showOverlay(html);
+    }
+</script>

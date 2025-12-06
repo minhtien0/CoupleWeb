@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Couple App - Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        window.APP_USER = <%- JSON.stringify(session.user || null) %>;
+    </script>
+    <link href="./output.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer"
+    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .realtime-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -60%) scale(0.9);
+            background: white;
+            width: 80%;
+            max-width: 320px;
+            padding: 18px 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        /* Hiện lên */
+        
+        .realtime-popup.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        /* Ẩn đi */
+        
+        .realtime-popup.hide {
+            opacity: 0;
+            transform: translate(-50%, -40%) scale(0.9);
+        }
+        
+        .progress-circle {
+            transform: rotate(-90deg);
+        }
+        
+        .progress-bar {
+            stroke-dasharray: 175.92;
+            stroke-dashoffset: calc(175.92 - (175.92 * var(--progress) / 100));
+            transition: stroke-dashoffset 0.5s ease-in-out;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-rose-50 to-orange-50 font-sans">
+
+    <!-- Header -->
+    <div class="bg-white/80 backdrop-blur-sm border-b border-rose-100 sticky top-0 z-10">
+        <div class="max-w-md mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-r from-rose-400 to-pink-400 rounded-full flex items-center justify-center cursor-pointer" onclick="window.location.href='/home'">
+                        <svg class="w-5 h-5 text-white fill-white" viewBox="0 0 24 24">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-semibold text-gray-800">Chào
+                            <%=infoCouple ? infoCouple.user1_name : 'user 1' %> &
+                                <%= infoCouple ? infoCouple.user2_name : 'user 2'%>!</h1>
+                        <%
+                        function daysTogether(startDate) {
+                            const start = new Date(startDate);
+
+                            // Giờ Việt Nam (UTC+7)
+                            const now = new Date();
+                            now.setHours(now.getHours() + 7);
+
+                            const diffTime = now - start;
+                            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+                            // +1 để tính ngày hiện tại là ngày thứ 1
+                            return diffDays;
+                        }
+                        %>
+
+                            <p class="text-sm text-gray-600">
+                                Ngày thứ <span id="current-streak"><%= daysTogether(infoCouple.started_at_couple) %></span> cùng nhau
+                            </p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="flex items-center space-x-1 bg-rose-100 px-2 py-1 rounded-full">
+                        <i class="fa-solid fa-ranking-star"></i>
+                        <%
+                            let rank = "";
+
+                            if (infoCouple.max_streak < 15) {
+                                rank = "Sắt";
+                            } else if (infoCouple.max_streak < 30) {
+                                rank = "Đồng";
+                            } else if (infoCouple.max_streak < 60) {
+                                rank = "Bạc";
+                            } else if (infoCouple.max_streak < 120) {
+                                rank = "Vàng";
+                            } else if (infoCouple.max_streak < 365) {
+                                rank = "Kim cương";
+                            } else {
+                                rank = "Huyền thoại";
+                            }
+                            %>
+                            <span class="text-sm font-medium text-rose-700" id="heart-points"><%= rank %></span>
+                    </div>
+                    <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                        <span class="text-sm font-bold text-emerald-700" id="streak-number"><i class="fa-solid fa-hashtag"></i> <%=infoCouple ? infoCouple.current_streak : '0' %></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-md mx-auto px-4 py-6 space-y-6">
+
+        <!-- Check-in Today -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Check-in hôm nay</h2>
+                <div class="w-12 h-12 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                </div>
+            </div>
+            <p class="text-gray-600 mb-4">Chia sẻ cảm xúc và khoảnh khắc đặc biệt của ngày hôm nay</p>
+            <div id="checkin-message" class="mt-3 text-center text-sm"></div>
+            <button onclick="handleCheckIn()" class="w-full bg-gradient-to-r from-rose-400 to-pink-400 text-white py-3 rounded-xl font-medium hover:shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]">
+                💕 Check-in ngay
+            </button>
+            <script>
+                async function handleCheckIn() {
+                    const messageBox = document.getElementById("checkin-message");
+                    messageBox.innerHTML = "⏳ Đang xử lý...";
+
+                    try {
+                        const res = await fetch("/home/checkin", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            }
+                        });
+
+                        const data = await res.json();
+
+                        if (!res.ok) {
+                            // ❌ Nếu backend báo lỗi
+                            messageBox.innerHTML = `<span class="text-red-500">⚠ ${data.error}</span>`;
+                            return;
+                        }
+
+                        // ✔ Check-in thành công
+                        messageBox.innerHTML = `
+            <span class="text-green-600 font-medium">
+                🎉 ${data.message}<br>
+                🔥 Chuỗi hiện tại: ${data.current_streak}<br>
+                🏆 Kỷ lục: ${data.max_streak}
+            </span>
+        `;
+
+                    } catch (err) {
+                        messageBox.innerHTML = `<span class="text-red-500">🚫 Lỗi kết nối tới server!</span>`;
+                        console.error(err);
+                    }
+                }
+            </script>
+        </div>
+
+        <!-- Quick Decision -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Quyết định nhanh</h2>
+                <svg class="w-6 h-6 text-orange-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path>
+                    <path d="M7 2v20"></path>
+                    <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path>
+                </svg>
+            </div>
+
+            <div id="quick-decision-content">
+                <button onclick="showQuickSuggestions()" class="w-full bg-gradient-to-r from-orange-400 to-amber-400 text-white py-4 rounded-xl font-medium text-lg hover:shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]">
+                    🤔 Hôm nay ăn gì?
+                </button>
+            </div>
+
+            <div id="suggestions-content" class="space-y-3 hidden">
+                <div class="flex items-center p-3 bg-orange-50 rounded-xl hover:bg-orange-100 cursor-pointer transition-colors">
+                    <svg class="w-5 h-5 text-orange-600 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M7 14c-1.66 0-3-1.34-3-3 0-1.31.84-2.41 2-2.83V6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1.67c1.16.42 2 1.52 2 2.83 0 1.66-1.34 3-3 3zM21 6H11v2h10V6zM21 14H11v2h10v-2z"></path>
+                    </svg>
+                    <div class="flex-1">
+                        <p class="font-medium text-gray-800">Café yêu thích gần nhà</p>
+                    </div>
+                    <span class="text-xs bg-orange-200 text-orange-700 px-2 py-1 rounded-full">Uống</span>
+                </div>
+                <div class="flex items-center p-3 bg-orange-50 rounded-xl hover:bg-orange-100 cursor-pointer transition-colors">
+                    <svg class="w-5 h-5 text-orange-600 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path>
+                        <path d="M7 2v20"></path>
+                        <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path>
+                    </svg>
+                    <div class="flex-1">
+                        <p class="font-medium text-gray-800">Thử món Thái mới</p>
+                    </div>
+                    <span class="text-xs bg-orange-200 text-orange-700 px-2 py-1 rounded-full">Ăn</span>
+                </div>
+                <div class="flex items-center p-3 bg-orange-50 rounded-xl hover:bg-orange-100 cursor-pointer transition-colors">
+                    <svg class="w-5 h-5 text-orange-600 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    <div class="flex-1">
+                        <p class="font-medium text-gray-800">Dạo phố đi bộ Nguyễn Huệ</p>
+                    </div>
+                    <span class="text-xs bg-orange-200 text-orange-700 px-2 py-1 rounded-full">Đi</span>
+                </div>
+                <button onclick="hideQuickSuggestions()" class="text-sm text-gray-500 underline hover:text-gray-700">
+                    Đóng gợi ý
+                </button>
+            </div>
+        </div>
+
+        <!-- Upcoming Dates -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Lịch sắp tới</h2>
+                <svg class="w-6 h-6 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+            </div>
+
+            <div class="space-y-3">
+                <% if (listDateTomorrow.length > 0) { %>
+                    <% listDateTomorrow.forEach(u => { %>
+                        <div class="space-y-3">
+                            <div class="flex items-center p-4 bg-rose-50 rounded-xl border-l-4 border-rose-400">
+                                <div class="w-10 h-10 bg-rose-200 rounded-full flex items-center justify-center mr-4">
+                                    <svg class="w-5 h-5 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2v11z"></path>
+                                <circle cx="12" cy="13" r="4"></circle>
+                            </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-medium text-gray-800">
+                                        <%= u.title %>
+                                    </h4>
+                                    <%
+                                        function formatDate(date) {
+                                        const d = new Date(date);
+                                        const hh = d.getHours().toString().padStart(2, '0');
+                                        const mm = d.getMinutes().toString().padStart(2, '0');
+                                        const day = d.getDate();
+                                        const month = d.getMonth() + 1;
+                                        const year = d.getFullYear();
+                                        return `${hh}:${mm} ${day}/${month}/${year}`;
+                                        }
+                                        %>
+                                        <p class="text-sm text-gray-600">
+                                            <%= formatDate(u.time) %> •
+                                                <%= u.location %>
+                                        </p>
+                                        <div class="flex items-center mt-2 space-x-2">
+                                            <span class="text-xs bg-rose-200 text-rose-700 px-2 py-1 rounded-full"><%= u.type %></span>
+                                            <span class="text-xs bg-emerald-200 text-emerald-700 px-2 py-1 rounded-full">Đã xác nhận</span>
+                                        </div>
+                                </div>
+                                <button onclick="window.location.href='/date'" class="p-2 text-gray-400 hover:text-gray-600">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </button>
+                            </div>
+                        </div>
+                        <% }); %>
+                            <%}else{%>
+                                <p>Không có lịch hẹn nào trong ngày này.</p>
+                                <%}%>
+            </div>
+
+
+        </div>
+
+        <!-- Progress Ring - Streak -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800">Chuỗi ngày</h3>
+                    <p class="text-sm text-gray-600">Tiếp tục phát huy nhé!</p>
+                </div>
+                <div class="relative">
+                    <svg class="w-16 h-16 progress-circle">
+                        <circle
+                            cx="32"
+                            cy="32"
+                            r="28"
+                            stroke="#fecaca"
+                            stroke-width="4"
+                            fill="none"
+                        />
+                        <circle
+                            cx="32"
+                            cy="32"
+                            r="28"
+                            stroke="#f87171"
+                            stroke-width="4"
+                            fill="none"
+                            stroke-linecap="round"
+                            class="progress-bar"
+                            style="--progress: 40"
+                        />
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-lg font-bold text-gray-800" id="progress-streak"><%=infoCouple.current_streak%></span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 text-center">
+                <%
+                const currentStreak = infoCouple.current_streak;
+
+                let targetStreak = 0;
+                let rankTaget = "";
+                let daysRemaining = 0;
+
+                // Xác định danh hiệu và số ngày còn lại
+                if (currentStreak < 15) {
+                    rankTaget = "Sắt";
+                    targetStreak = 15;
+                } else if (currentStreak < 30) {
+                    rankTaget = "Đồng";
+                    targetStreak = 30;
+                } else if (currentStreak < 60) {
+                    rankTaget = "Bạc";
+                    targetStreak = 60;
+                } else if (currentStreak < 120) {
+                    rankTaget = "Vàng";
+                    targetStreak = 120;
+                } else if (currentStreak < 365) {
+                    rankTaget = "Kim cương";
+                    targetStreak = 365;
+                } else {
+                    rankTaget = "Huyền thoại";
+                    targetStreak = Infinity; // Không có mốc tiếp theo
+                }
+
+                if (targetStreak !== Infinity) {
+                    daysRemaining = targetStreak - currentStreak;
+                    
+                } else {
+                    daysRemaining = 0; // Nếu đã đạt "Huyền thoại", không cần tính ngày còn lại
+                }
+                %>
+                    <p class="text-sm text-gray-600">
+                        Còn <span class="font-semibold text-rose-600"><%= daysRemaining %> ngày</span> để đạt huy hiệu "
+                        <%= rankTaget %>" 🏆
+                    </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <%- include('layouts/footer') %>
+        <script>
+            // State variables
+            let heartPoints = 1250;
+            let currentStreak = 12;
+            let showingSuggestions = false;
+
+            // Quick suggestions functionality
+            function showQuickSuggestions() {
+                document.getElementById('quick-decision-content').classList.add('hidden');
+                document.getElementById('suggestions-content').classList.remove('hidden');
+                showingSuggestions = true;
+            }
+
+            function hideQuickSuggestions() {
+                document.getElementById('quick-decision-content').classList.remove('hidden');
+                document.getElementById('suggestions-content').classList.add('hidden');
+                showingSuggestions = false;
+            }
+
+            // Bottom navigation functionality
+            function switchTab(tabName) {
+                // Remove active class from all tabs
+                const tabs = document.querySelectorAll('[data-tab]');
+                tabs.forEach(tab => {
+                    tab.classList.remove('text-rose-600', 'bg-rose-50');
+                    tab.classList.add('text-gray-400', 'hover:text-gray-600');
+                    const svg = tab.querySelector('svg');
+                    svg.classList.remove('fill-rose-600');
+                });
+
+                // Add active class to selected tab
+                const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
+                activeTab.classList.remove('text-gray-400', 'hover:text-gray-600');
+                activeTab.classList.add('text-rose-600', 'bg-rose-50');
+                const activeSvg = activeTab.querySelector('svg');
+                if (tabName === 'Home') {
+                    activeSvg.classList.add('fill-rose-600');
+                }
+            }
+
+            // Add event listeners for bottom navigation
+            document.addEventListener('DOMContentLoaded', function() {
+                const tabs = document.querySelectorAll('[data-tab]');
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        switchTab(tab.dataset.tab);
+                    });
+                });
+
+                // Update progress ring
+                const progressBar = document.querySelector('.progress-bar');
+                const progressPercentage = (currentStreak / 30) * 100;
+                progressBar.style.setProperty('--progress', progressPercentage);
+
+                // Update days remaining
+                document.getElementById('days-remaining').textContent = `${30 - currentStreak} ngày`;
+            });
+
+            // Add hover effects for suggestion items
+            document.addEventListener('DOMContentLoaded', function() {
+                const suggestionItems = document.querySelectorAll('#suggestions-content > div');
+                suggestionItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        // Add click feedback
+                        this.classList.add('scale-95');
+                        setTimeout(() => {
+                            this.classList.remove('scale-95');
+                            hideQuickSuggestions();
+                        }, 150);
+                    });
+                });
+            });
+        </script>
+</body>
+
+</html>

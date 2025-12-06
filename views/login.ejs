@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Couple App - Đăng nhập</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'hearts': 'hearts 2s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'slideInUp': 'slideInUp 0.5s ease-out',
+                        'fadeIn': 'fadeIn 0.3s ease-out',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @keyframes float {
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+        
+        @keyframes hearts {
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.7;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes glow {
+            0% {
+                box-shadow: 0 0 20px rgba(236, 72, 153, 0.3);
+            }
+            100% {
+                box-shadow: 0 0 30px rgba(236, 72, 153, 0.6);
+            }
+        }
+        
+        @keyframes slideInUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .auth-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        .couple-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .couple-bg::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: float 20s infinite linear;
+        }
+        
+        .floating-heart {
+            position: absolute;
+            animation: hearts 3s ease-in-out infinite;
+        }
+        
+        .floating-heart:nth-child(1) {
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .floating-heart:nth-child(2) {
+            top: 20%;
+            right: 15%;
+            animation-delay: 0.5s;
+        }
+        
+        .floating-heart:nth-child(3) {
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 1s;
+        }
+        
+        .floating-heart:nth-child(4) {
+            bottom: 15%;
+            right: 10%;
+            animation-delay: 1.5s;
+        }
+        
+        .input-group {
+            transition: all 0.3s ease;
+        }
+        
+        .input-group:focus-within {
+            transform: translateY(-2px);
+        }
+        
+        .code-input {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .code-input:focus {
+            background: white;
+            border-color: #ec4899;
+            box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+        }
+        
+        .step-indicator {
+            transition: all 0.5s ease;
+        }
+        
+        .step-indicator.active {
+            background: linear-gradient(135deg, #ec4899, #8b5cf6);
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .loading-dots::after {
+            content: '';
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% {
+                content: '';
+            }
+            33% {
+                content: '.';
+            }
+            66% {
+                content: '..';
+            }
+            100% {
+                content: '...';
+            }
+        }
+    </style>
+</head>
+
+<body class="min-h-screen couple-bg font-sans">
+
+    <!-- Floating Hearts Background -->
+    <div class="floating-heart text-pink-300 text-2xl opacity-60">💕</div>
+    <div class="floating-heart text-rose-300 text-xl opacity-50">💖</div>
+    <div class="floating-heart text-purple-300 text-lg opacity-70">💝</div>
+    <div class="floating-heart text-pink-400 text-xl opacity-60">💗</div>
+
+    <!-- Main Container -->
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md">
+
+            <!-- App Logo & Title -->
+            <div class="text-center mb-8 animate-slideInUp">
+                <div class="w-20 h-20 bg-gradient-to-r from-pink-500 to-purple-500 rounded-3xl flex items-center justify-center mx-auto mb-4 animate-glow">
+                    <svg class="w-10 h-10 text-white animate-hearts" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                </div>
+                <h1 class="text-3xl font-bold text-white mb-2">Couple App</h1>
+                <p class="text-white/80 text-sm">Ứng dụng quản lý tình yêu cho các cặp đôi</p>
+            </div>
+
+            <!-- Auth Card -->
+            <div class="auth-card rounded-3xl shadow-2xl border border-white/20 p-8 animate-slideInUp">
+
+                <!-- Step Indicator -->
+                <div class="flex justify-center space-x-4 mb-8" id="step-indicators">
+                    <div class="step-indicator active w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-gray-200 text-gray-600">1</div>
+                    <div class="w-12 h-0.5 bg-gray-200 self-center"></div>
+                    <div class="step-indicator w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-gray-200 text-gray-600">2</div>
+                    <div class="w-12 h-0.5 bg-gray-200 self-center"></div>
+                    <div class="step-indicator w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-gray-200 text-gray-600">3</div>
+                </div>
+
+                <!-- Step 1: Welcome & Choice -->
+                <div id="step-1" class="space-y-6">
+                    <div class="text-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-2">Chào mừng! 👋</h2>
+                        <p class="text-gray-600">Bạn muốn bắt đầu như thế nào?</p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <button onclick="selectChoice('create')" class="w-full p-6 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white rounded-2xl font-medium transition-all hover:scale-105 hover:shadow-xl">
+                            <div class="flex items-center justify-center space-x-3">
+                                <span class="text-2xl">💕</span>
+                                <div class="text-left">
+                                    <div class="font-semibold">Tạo tài khoản mới</div>
+                                    <div class="text-sm text-pink-100">Tôi muốn tạo tài khoản couple đầu tiên</div>
+                                </div>
+                            </div>
+                        </button>
+
+                        <button onclick="showLoginForm()" class="w-full p-6 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white rounded-2xl font-medium transition-all hover:scale-105 hover:shadow-xl">
+                            <div class="flex items-center justify-center space-x-3">
+                                <span class="text-2xl">🔗</span>
+                                <div class="text-left">
+                                    <div class="font-semibold">Đăng nhập tài khoản</div>
+                                    <div class="text-sm text-purple-100">Tìm kiếm người yêu cùng tôi nhé</div>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="text-center">
+                        <button onclick="" class="text-gray-600 hover:text-gray-800 text-sm transition-colors">
+                            Đã có tài khoản? <span class="font-medium underline">Quên mật khẩu</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Personal Info -->
+                <div id="step-2" class="space-y-6 hidden">
+                    <div class="text-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-2" id="step-2-title">Tạo hồ sơ cá nhân</h2>
+                        <p class="text-gray-600" id="step-2-subtitle">Điền thông tin để bắt đầu</p>
+                    </div>
+
+                    <form id="personal-form" action="/register" method="POST" class="space-y-4">
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tên hiển thị</label>
+                            <input type="text" name="displayName" id="display-name" class="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all" placeholder="VD: An, Minh...">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="input-group">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Sinh nhật</label>
+                                <input type="date" name="birthday" id="birthday" class="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all">
+                            </div>
+                            <div class="input-group">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Giới tính</label>
+                                <select name="gender" id="gender" class="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all">
+                    <option value="">Chọn giới tính</option>
+                    <option value="Nữ">Nữ 👩</option>
+                    <option value="Nam">Nam 👨</option>
+                    <option value="Khác">Khác 👤</option>
+                </select>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" name="email" id="email" class="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all" placeholder="your@email.com">
+                        </div>
+
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
+                            <input type="password" name="password" id="password" class="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all" placeholder="Tối thiểu 6 ký tự">
+                        </div>
+                        <div>
+                            <p id="form-error" class="text-red-500 text-sm"></p>
+                        </div>
+
+                        <div id="couple-code-section" class="input-group hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Mã couple</label>
+                            <input type="text" id="couple-code" class="code-input w-full p-4 rounded-xl text-center text-lg font-mono font-bold tracking-wider uppercase focus:outline-none" placeholder="LOVE2024" maxlength="8">
+                            <p class="text-sm text-gray-500 mt-2 text-center">Nhập mã 8 ký tự mà người yêu đã chia sẻ</p>
+                        </div>
+                    </form>
+
+                    <div class="flex space-x-3">
+                        <button onclick="goToStep(1)" class="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+            ← Quay lại
+        </button>
+                        <button type="submit" form="personal-form" class="flex-1 py-3 px-6 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-medium hover:shadow-lg transition-all">
+            Tiếp tục →
+        </button>
+                    </div>
+                </div>
+
+                <script>
+                    document.getElementById("personal-form").addEventListener("submit", async function(e) {
+                        e.preventDefault(); // Ngăn reload trang
+
+                        const form = e.target;
+                        const formData = new FormData(form);
+
+                        // Convert FormData -> JSON
+                        const data = Object.fromEntries(formData.entries());
+
+                        try {
+                            const res = await fetch("/register", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify(data)
+                            });
+
+                            const result = await res.json();
+
+                            if (result.success) {
+                                // ✅ Đăng ký thành công -> sang bước 3
+                                goToStep(3);
+                            } else {
+                                // ❌ Hiển thị lỗi
+                                alert(result.message);
+                            }
+                        } catch (error) {
+                            console.error(error);
+                            alert("Có lỗi kết nối server!");
+                        }
+                    });
+                </script>
+
+
+                <!-- Step 3: Couple Connection -->
+                <div id="step-3" class="space-y-6 hidden">
+                    <div class="text-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-2">Kết nối đôi</h2>
+                        <p class="text-gray-600">Tạo hoặc nhập mã để ghép cặp</p>
+                    </div>
+
+                    <!-- Create Couple Code -->
+                    <div id="create-code-section" class="space-y-4">
+                        <div class="bg-gradient-to-br from-pink-50 to-purple-50 rounded-2xl p-6 border border-pink-200">
+                            <div class="text-center">
+                                <div class="text-2xl mb-4 animate-float">💕</div>
+                                <h3 class="font-semibold text-gray-800 mb-2">Mã couple của bạn</h3>
+                                <div class="bg-white rounded-xl p-4 mb-4">
+                                    <div class="text-3xl font-mono font-bold text-pink-600 tracking-wider" id="generated-code">LOVE2025</div>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-4">Chia sẻ mã này với người yêu để kết nối</p>
+                                <div class="flex space-x-2">
+                                    <button onclick="copyCode()" class="flex-1 py-2 px-4 bg-white border border-pink-200 rounded-lg text-pink-600 font-medium hover:bg-pink-50 transition-colors">
+                                        📋 Copy mã
+                                    </button>
+                                    <button onclick="shareCode()" class="flex-1 py-2 px-4 bg-pink-500 text-white rounded-lg font-medium hover:bg-pink-600 transition-colors">
+                                        📤 Chia sẻ
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <p class="text-sm text-gray-500 mb-4">Chờ người yêu kết nối...</p>
+                            <div class="loading-dots text-pink-500 font-semibold">Đang chờ</div>
+                        </div>
+                    </div>
+
+                    <!-- Join with Code -->
+                    <div id="join-code-section" class="space-y-4 hidden">
+                        <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-6 border border-purple-200">
+                            <div class="text-center">
+                                <div class="text-2xl mb-4 animate-float">🔗</div>
+                                <h3 class="font-semibold text-gray-800 mb-4">Nhập mã couple</h3>
+                                <input type="text" id="join-couple-code" class="code-input w-full p-4 rounded-xl text-center text-2xl font-mono font-bold tracking-wider uppercase focus:outline-none mb-4" placeholder="LOVE2024" maxlength="8">
+                                <button onclick="joinCouple()" class="w-full py-3 px-6 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl font-medium hover:shadow-lg transition-all">
+                                    🔗 Kết nối ngay
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Connection Status -->
+                    <div id="connection-status" class="hidden">
+                        <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200 text-center">
+                            <div class="text-3xl mb-4 animate-hearts">💚</div>
+                            <h3 class="font-semibold text-gray-800 mb-2">Kết nối thành công!</h3>
+                            <p class="text-sm text-gray-600 mb-4">Chúc mừng! Bạn đã được ghép cặp thành công</p>
+                            <button onclick="completeRegistration()" class="py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-medium hover:shadow-lg transition-all">
+                                Bắt đầu hành trình yêu 💕
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-3">
+                        <button onclick="goToStep(2)" class="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                            ← Quay lại
+                        </button>
+                        <button onclick="skipConnection()" class="flex-1 py-3 px-6 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                            Bỏ qua (kết nối sau)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Login Form -->
+                <div id="login-form" class="space-y-6 hidden">
+                    <div class="text-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-2">Đăng nhập</h2>
+                        <p class="text-gray-600">Chào mừng trở lại!</p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" id="login-email" class="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all" placeholder="your@email.com">
+                        </div>
+
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
+                            <input type="password" id="login-password" class="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all" placeholder="Mật khẩu của bạn">
+                        </div>
+                        <div>
+                            <div>
+                                <p id="login-error" class="text-red-500 text-sm"></p>
+                                <!-- Thêm phần này -->
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between text-sm">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="rounded border-gray-300 text-pink-500 focus:ring-pink-500">
+                                <span class="ml-2 text-gray-600">Ghi nhớ đăng nhập</span>
+                            </label>
+                            <button onclick="forgotPassword()" class="text-pink-600 hover:text-pink-700 font-medium">
+                                Quên mật khẩu?
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" onclick="login(event)" class="w-full py-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-medium text-lg hover:shadow-lg transition-all">
+                        Đăng nhập
+                    </button>
+
+                    <div class="text-center">
+                        <button onclick="showRegister()" class="text-gray-600 hover:text-gray-800 text-sm transition-colors">
+                            Chưa có tài khoản? <span class="font-medium underline">Đăng ký ngay</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terms & Privacy -->
+            <div class="text-center mt-6 text-white/70 text-xs space-y-1 animate-fadeIn">
+                <p>Bằng việc tiếp tục, bạn đồng ý với</p>
+                <div class="space-x-4">
+                    <button onclick="showTerms()" class="underline hover:text-white transition-colors">Điều khoản sử dụng</button>
+                    <button onclick="showPrivacy()" class="underline hover:text-white transition-colors">Chính sách bảo mật</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Animation Overlay -->
+    <div id="success-overlay" class="fixed inset-0 bg-gradient-to-br from-pink-500/90 to-purple-500/90 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="text-center text-white animate-slideInUp">
+            <div class="text-8xl mb-6 animate-hearts">💕</div>
+            <h2 class="text-4xl font-bold mb-4">Chúc mừng!</h2>
+            <p class="text-xl mb-8">Bạn đã tham gia Couple App thành công</p>
+            <div class="loading-dots text-2xl">Đang chuyển hướng</div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let currentStep = 1;
+        let selectedChoice = null;
+        let generatedCode = 'LOVE2025';
+
+        const userData = {
+            displayName: '',
+            birthday: '',
+            gender: '',
+            email: '',
+            password: '',
+            coupleCode: ''
+        };
+
+        // Step navigation
+        function goToStep(step) {
+            // Hide all steps
+            document.querySelectorAll('[id^="step-"]').forEach(el => {
+                el.classList.add('hidden');
+            });
+
+            // Show target step
+            document.getElementById(`step-${step}`).classList.remove('hidden');
+
+            // Update step indicators
+            updateStepIndicators(step);
+            currentStep = step;
+        }
+
+        function updateStepIndicators(activeStep) {
+            const indicators = document.querySelectorAll('.step-indicator');
+            indicators.forEach((indicator, index) => {
+                const stepNumber = index + 1;
+                if (stepNumber <= activeStep) {
+                    indicator.classList.add('active');
+                } else {
+                    indicator.classList.remove('active');
+                }
+            });
+        }
+
+        // Choice selection
+        function selectChoice(choice) {
+            selectedChoice = choice;
+
+            if (choice === 'create') {
+                document.getElementById('step-2-title').textContent = 'Tạo hồ sơ cá nhân';
+                document.getElementById('step-2-subtitle').textContent = 'Điền thông tin để tạo tài khoản couple';
+                document.getElementById('couple-code-section').classList.add('hidden');
+                document.getElementById('create-code-section').classList.remove('hidden');
+                document.getElementById('join-code-section').classList.add('hidden');
+            } else if (choice === 'join') {
+                document.getElementById('step-2-title').textContent = 'Tham gia bằng mã couple';
+                document.getElementById('step-2-subtitle').textContent = 'Nhập thông tin để tham gia couple';
+                document.getElementById('couple-code-section').classList.remove('hidden');
+                document.getElementById('create-code-section').classList.add('hidden');
+                document.getElementById('join-code-section').classList.remove('hidden');
+            }
+
+            goToStep(2);
+        }
+
+        // Form validation
+        function validateStep2() {
+            const requiredFields = ['display-name', 'birthday', 'gender', 'email', 'password'];
+            let isValid = true;
+
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    field.classList.add('border-red-500');
+                    isValid = false;
+                } else {
+                    field.classList.remove('border-red-500');
+                }
+            });
+
+            if (selectedChoice === 'join') {
+                const coupleCodeField = document.getElementById('couple-code');
+                if (!coupleCodeField.value.trim()) {
+                    coupleCodeField.classList.add('border-red-500');
+                    isValid = false;
+                } else {
+                    coupleCodeField.classList.remove('border-red-500');
+                }
+            }
+
+            if (!isValid) {
+                alert('Vui lòng điền đầy đủ thông tin bắt buộc!');
+                return false;
+            }
+
+            // Validate email
+            const email = document.getElementById('email').value;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                document.getElementById('email').classList.add('border-red-500');
+                alert('Email không hợp lệ!');
+                return false;
+            }
+
+            // Validate password
+            const password = document.getElementById('password').value;
+            if (password.length < 6) {
+                document.getElementById('password').classList.add('border-red-500');
+                alert('Mật khẩu phải có ít nhất 6 ký tự!');
+                return false;
+            }
+
+            return true;
+        }
+
+        // Code generation and management
+        function generateCoupleCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < 8; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            generatedCode = result;
+            document.getElementById('generated-code').textContent = result;
+        }
+
+        function copyCode() {
+            navigator.clipboard.writeText(generatedCode).then(() => {
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = '✅ Đã copy!';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        function shareCode() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Couple App - Mã kết nối',
+                    text: `Hãy tải Couple App và sử dụng mã: ${generatedCode} để kết nối với tôi! 💕`,
+                    url: window.location.origin
+                });
+            } else {
+                copyCode();
+                alert('Mã đã được copy! Hãy chia sẻ cho người yêu của bạn 💕');
+            }
+        }
+
+        function joinCouple() {
+            const code = document.getElementById('join-couple-code').value.trim().toUpperCase();
+
+            if (!code) {
+                alert('Vui lòng nhập mã couple!');
+                return;
+            }
+
+            if (code.length !== 8) {
+                alert('Mã couple phải có 8 ký tự!');
+                return;
+            }
+
+            // Simulate API call to join couple
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '🔄 Đang kết nối...';
+            button.disabled = true;
+
+            setTimeout(() => {
+                // Simulate successful connection
+                document.getElementById('join-code-section').classList.add('hidden');
+                document.getElementById('connection-status').classList.remove('hidden');
+                button.textContent = originalText;
+                button.disabled = false;
+            }, 60000);
+        }
+
+        // Auth functions
+        function showLoginForm() {
+            // Hide step indicators and all steps
+            document.getElementById('step-indicators').classList.add('hidden');
+            document.querySelectorAll('[id^="step-"]').forEach(el => {
+                el.classList.add('hidden');
+            });
+
+            // Show login form
+            document.getElementById('login-form').classList.remove('hidden');
+        }
+
+        function showRegister() {
+            // Show step indicators and go to step 1
+            document.getElementById('step-indicators').classList.remove('hidden');
+            document.getElementById('login-form').classList.add('hidden');
+            goToStep(1);
+        }
+
+        function login(event) {
+            // Không cần preventDefault nếu không trong form, nhưng giữ để an toàn
+            if (event) event.preventDefault();
+
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            const errorElement = document.getElementById('login-error');
+            const button = event ? event.target : document.querySelector('button[onclick="login()"]'); // Fallback nếu không có event
+            const originalText = button.textContent;
+
+            // Reset lỗi trước đó
+            if (errorElement) errorElement.textContent = '';
+
+            // 1. Kiểm tra không bỏ trống (KHÔNG thay đổi nút ở đây)
+            if (!email || !password) {
+                if (errorElement) errorElement.textContent = 'Vui lòng nhập email và mật khẩu!';
+                console.log('Validation fail: Missing fields'); // Debug
+                return; // Dừng, không loading, không gửi request
+            }
+
+            console.log('Validation pass: Starting loading and request'); // Debug
+
+            // 2. Hiệu ứng loading CHỈ khi validation pass (gửi request hợp lệ)
+            button.textContent = '🔄 Đang đăng nhập...';
+            button.disabled = true;
+
+            // 3. Gửi AJAX request
+            fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    console.log('Server response:', data); // Debug
+                    if (data.success) {
+                        // ✅ Đăng nhập thành công
+                        showSuccessOverlay();
+                        setTimeout(() => {
+                            window.location.href = data.redirect; // Tự động chuyển /matching hoặc /home
+                        }, 3000);
+                    } else {
+                        // ❌ Sai email hoặc mật khẩu (KHÔI PHỤC NÚT)
+                        if (errorElement) errorElement.textContent = data.message || 'Email hoặc mật khẩu không đúng!';
+                        // Không dùng alert để tránh popup; chỉ hiển thị message
+                        console.log('Login fail:', data.message);
+                        button.textContent = originalText;
+                        button.disabled = false;
+                    }
+                })
+                .catch(err => {
+                    console.error('Lỗi:', err);
+                    if (errorElement) errorElement.textContent = 'Không thể kết nối tới server!';
+                    // KHÔI PHỤC NÚT
+                    button.textContent = originalText;
+                    button.disabled = false;
+                });
+        }
+
+
+        function forgotPassword() {
+            const email = prompt('Nhập email để đặt lại mật khẩu:');
+            if (email) {
+                alert(`Đã gửi link đặt lại mật khẩu tới ${email}!\nVui lòng kiểm tra email của bạn.`);
+            }
+        }
+
+        // Registration flow
+        function completeRegistration() {
+            // Collect user data
+            userData.displayName = document.getElementById('display-name').value;
+            userData.birthday = document.getElementById('birthday').value;
+            userData.gender = document.getElementById('gender').value;
+            userData.email = document.getElementById('email').value;
+            userData.password = document.getElementById('password').value;
+
+            if (selectedChoice === 'join') {
+                userData.coupleCode = document.getElementById('couple-code').value;
+            }
+
+            // Simulate registration API call
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '🔄 Đang tạo tài khoản...';
+            button.disabled = true;
+
+            setTimeout(() => {
+                showSuccessOverlay();
+                setTimeout(() => {
+                    window.location.href = '/matching'; // Redirect to matching page 
+                }, 3000);
+            }, 2000);
+        }
+
+        function skipConnection() {
+            // Allow user to skip couple connection and use app solo
+            if (confirm('Bạn có thể kết nối với người yêu sau này. Tiếp tục tạo tài khoản cá nhân?')) {
+                completeRegistration();
+            }
+        }
+
+        // UI effects
+        function showSuccessOverlay() {
+            document.getElementById('success-overlay').classList.remove('hidden');
+        }
+
+        function showTerms() {
+            alert('Điều khoản sử dụng:\n\n• Ứng dụng dành cho người trên 18 tuổi\n• Không chia sẻ thông tin cá nhân với bên thứ 3\n• Tôn trọng quyền riêng tư của đối phương\n• Sử dụng ứng dụng một cách tích cực');
+        }
+
+        function showPrivacy() {
+            alert('Chính sách bảo mật:\n\n• Dữ liệu được mã hóa end-to-end\n• Không thu thập thông tin không cần thiết\n• Người dùng có quyền xóa dữ liệu\n• Tuân thủ GDPR và các quy định về bảo mật');
+        }
+
+        // Auto-formatting for couple code inputs
+        function setupCodeInputs() {
+            const codeInputs = document.querySelectorAll('#couple-code, #join-couple-code');
+            codeInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^A-Z0-9]/g, '').substring(0, 8);
+                });
+
+                input.addEventListener('keyup', function() {
+                    this.value = this.value.toUpperCase();
+                });
+            });
+        }
+
+        // Enhanced step 2 navigation with validation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Override the step 3 navigation button
+            const step2ContinueBtn = document.querySelector('#step-2 button[onclick="goToStep(3)"]');
+            if (step2ContinueBtn) {
+                step2ContinueBtn.onclick = function() {
+                    if (validateStep2()) {
+                        goToStep(3);
+
+                        // Generate new couple code if creating
+                        if (selectedChoice === 'create') {
+                            generateCoupleCode();
+                            // Simulate waiting for partner
+                            simulatePartnerConnection();
+                        }
+                    }
+                };
+            }
+
+            // Setup code input formatting
+            setupCodeInputs();
+
+            // Add real-time validation
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    if (this.value.trim()) {
+                        this.classList.remove('border-red-500');
+                        this.classList.add('border-green-500');
+                    }
+                });
+
+                input.addEventListener('focus', function() {
+                    this.classList.remove('border-red-500', 'border-green-500');
+                });
+            });
+        });
+
+        // Simulate partner connection process
+        function simulatePartnerConnection() {
+            if (selectedChoice === 'create') {
+                // Simulate random connection after 5-15 seconds
+                const connectionTime = Math.random() * 10000 + 5000;
+                setTimeout(() => {
+                    if (Math.random() > 0.3) { // 70% success rate
+                        // Success case
+                        document.getElementById('create-code-section').classList.add('hidden');
+                        document.getElementById('connection-status').classList.remove('hidden');
+                    } else {
+                        // Still waiting case
+                        const loadingText = document.querySelector('.loading-dots');
+                        loadingText.textContent = 'Vẫn đang chờ kết nối...';
+
+                        // Add helpful message
+                        const helpDiv = document.createElement('div');
+                        helpDiv.className = 'text-center mt-4';
+                        helpDiv.innerHTML = `
+                            <p class="text-sm text-gray-600 mb-2">Mất nhiều thời gian hơn dự kiến?</p>
+                            <button onclick="resendCode()" class="text-pink-600 text-sm font-medium hover:underline">
+                                📤 Gửi lại mã
+                            </button>
+                        `;
+                        document.getElementById('create-code-section').appendChild(helpDiv);
+                    }
+                }, connectionTime);
+            }
+        }
+
+        function resendCode() {
+            alert('Mã couple đã được gửi lại qua:\n\n📧 Email\n📱 SMS\n💬 Các ứng dụng nhắn tin\n\nHãy kiểm tra và chia sẻ với người yêu!');
+        }
+
+        // Enhanced error handling
+        function handleError(error, context) {
+            console.error(`Error in ${context}:`, error);
+
+            let userMessage = 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+
+            switch (context) {
+                case 'registration':
+                    userMessage = 'Không thể tạo tài khoản. Vui lòng kiểm tra thông tin và thử lại.';
+                    break;
+                case 'login':
+                    userMessage = 'Thông tin đăng nhập không chính xác.';
+                    break;
+                case 'couple_connection':
+                    userMessage = 'Không thể kết nối couple. Kiểm tra mã và thử lại.';
+                    break;
+            }
+
+            alert(userMessage);
+        }
+
+        // Social login simulation (future feature)
+        function socialLogin(provider) {
+            alert(`Tính năng đăng nhập bằng ${provider} sẽ có trong phiên bản tiếp theo! 🚀`);
+        }
+
+        // Demo data for testing
+        function fillDemoData() {
+            document.getElementById('display-name').value = 'An';
+            document.getElementById('birthday').value = '2001-03-15';
+            document.getElementById('gender').value = 'female';
+            document.getElementById('email').value = 'an@example.com';
+            document.getElementById('password').value = 'password123';
+
+            if (selectedChoice === 'join') {
+                document.getElementById('couple-code').value = 'DEMO2024';
+            }
+        }
+
+        // Easter egg - konami code for demo data
+        let konamiCode = [];
+        const konamiSequence = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65]; // ↑↑↓↓←→←→BA
+
+        document.addEventListener('keydown', function(e) {
+            konamiCode.push(e.keyCode);
+            if (konamiCode.length > konamiSequence.length) {
+                konamiCode.shift();
+            }
+
+            if (JSON.stringify(konamiCode) === JSON.stringify(konamiSequence)) {
+                fillDemoData();
+                alert('🎮 Demo data loaded! Konami code activated!');
+                konamiCode = [];
+            }
+        });
+
+        // Accessibility enhancements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add ARIA labels
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                const label = input.previousElementSibling;
+                if (label && label.tagName === 'LABEL') {
+                    input.setAttribute('aria-describedby', input.id + '-help');
+                }
+            });
+
+            // Add keyboard navigation for steps
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && e.target.tagName === 'BUTTON') {
+                    e.target.click();
+                }
+            });
+        });
+
+        // Performance optimization
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Add debounced validation for real-time feedback
+        const debouncedValidation = debounce(function(input) {
+            if (input.value.trim()) {
+                // Show success state
+                input.classList.remove('border-red-500');
+                input.classList.add('border-green-300');
+            }
+        }, 500);
+
+        // Apply to all inputs
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => debouncedValidation(input));
+            });
+        });
+
+        // Analytics simulation (for future implementation)
+        function trackEvent(eventName, properties = {}) {
+            console.log(`Analytics Event: ${eventName}`, properties);
+            // In real app, this would send to analytics service
+        }
+
+        // Track user journey
+        function trackStep(stepNumber) {
+            trackEvent('auth_step_completed', {
+                step: stepNumber,
+                choice: selectedChoice,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        // Override goToStep to include tracking
+        const originalGoToStep = goToStep;
+        goToStep = function(step) {
+            originalGoToStep(step);
+            trackStep(step);
+        };
+    </script>
+</body>
+
+</html>

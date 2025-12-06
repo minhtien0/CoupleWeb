@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Couple App - Journey</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        window.APP_USER = <%- JSON.stringify(session.user || null) %>;
+    </script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-slow': 'bounce 2s infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .realtime-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -60%) scale(0.9);
+            background: white;
+            width: 80%;
+            max-width: 320px;
+            padding: 18px 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        /* Hiện lên */
+        
+        .realtime-popup.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        /* Ẩn đi */
+        
+        .realtime-popup.hide {
+            opacity: 0;
+            transform: translate(-50%, -40%) scale(0.9);
+        }
+        
+        .progress-circle {
+            transform: rotate(-90deg);
+        }
+        
+        .progress-bar {
+            stroke-dasharray: 251.2;
+            stroke-dashoffset: calc(251.2 - (251.2 * var(--progress) / 100));
+            transition: stroke-dashoffset 0.8s ease-in-out;
+        }
+        
+        .love-language-card {
+            transition: all 0.3s ease;
+        }
+        
+        .love-language-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(206, 80, 80, 0.1);
+        }
+        
+        .goal-card {
+            transition: all 0.2s ease;
+        }
+        
+        .goal-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .streak-flame {
+            animation: flicker 1.5s ease-in-out infinite alternate;
+        }
+        
+        @keyframes flicker {
+            0% {
+                transform: rotate(-1deg) scale(1);
+            }
+            100% {
+                transform: rotate(1deg) scale(1.05);
+            }
+        }
+        
+        .milestone-line {
+            background: linear-gradient(to bottom, #fb7185 0%, #fb7185 50%, #d1d5db 50%, #d1d5db 100%);
+        }
+        
+        .timeline::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .timeline::-webkit-scrollbar-thumb {
+            background: #f4a5b5;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-violet-50 to-rose-50 font-sans">
+
+    <!-- Header -->
+    <%- include('./components/header') %>
+
+        <!-- Main Content -->
+        <div class="max-w-md mx-auto px-4 py-6 space-y-6 pb-24">
+
+            <!-- Streak Overview -->
+            <%- include('./components/streak-overview') %>
+
+                <!-- Love Languages -->
+                <%- include('./components/love-languages') %>
+
+                    <!-- Compatibility -->
+                    <%- include('./components/compatibility') %>
+
+                        <!-- Love Test Modal -->
+                        <%- include('./components/love-test-modal') %>
+
+                            <!-- Current Goals -->
+                            <%- include('./components/current-goals') %>
+
+                                <!-- Goal Detail Modal -->
+                                <%- include('./components/goal-detail-modal') %>
+
+                                    <!-- Goal Create Modal -->
+                                    <%- include('./components/goal-create-modal') %>
+
+                                        <!-- Milestones -->
+                                        <%- include('./components/milestones') %>
+
+                                            <!-- Milestone Modal -->
+                                            <%- include('./components/milestone-modal') %>
+
+        </div>
+
+        <!-- Footer -->
+        <%- include('../layouts/footer') %>
+
+            <!-- Scripts -->
+            <%- include('./components/scripts') %>
+
+</body>
+
+</html>

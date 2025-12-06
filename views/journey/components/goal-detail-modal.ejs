@@ -1,0 +1,45 @@
+<!-- Goal Detail Modal -->
+<div id="goal-detail-modal" class="fixed inset-0 bg-black/40 hidden z-30">
+    <div class="bg-white max-w-md mx-auto mt-20 p-6 rounded-2xl shadow-lg">
+
+        <h2 class="text-xl font-semibold" id="g-title"></h2>
+        <p class="text-gray-600" id="g-desc"></p>
+        <p class="text-sm text-gray-500 mt-1">
+            <span id="g-date"></span>
+        </p>
+        <p class="text-sm text-gray-500 mt-1">
+            <span id="e-date"></span>
+        </p>
+
+        <!-- progress -->
+        <div class="mt-3">
+            <span id="g-progress-text" class="text-sm font-medium"></span>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div id="g-progress-bar" class="bg-green-500 h-2 rounded-full"></div>
+            </div>
+        </div>
+
+        <!-- LOG LIST -->
+        <div class="mt-4 max-h-48 overflow-y-auto border p-3 rounded-lg" id="g-logs">
+            Loading...
+        </div>
+
+        <!-- Check-in -->
+        <form id="checkin-form" class="mt-5">
+            <input type="hidden" id="checkin-goal-id" name="goal_id">
+
+            <label class="text-sm font-medium mb-1 block">Ghi chú</label>
+            <textarea name="note" class="w-full border rounded-lg p-2"></textarea>
+
+            <label class="text-sm font-medium mt-3 block">Ảnh</label>
+            <input type="file" name="image" accept="image/*" capture="environment">
+
+            <button class="w-full bg-green-500 text-white p-3 rounded-xl mt-4">
+                Điểm danh
+            </button>
+        </form>
+
+        <button onclick="closeGoalDetail()" class="mt-3 w-full py-2 text-gray-500">Đóng</button>
+
+    </div>
+</div>

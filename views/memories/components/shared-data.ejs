@@ -1,0 +1,10 @@
+<script>
+    // Dữ liệu sample
+    const albumsData = <%- JSON.stringify(albumsData) %>;
+    const diariesData = <%- JSON.stringify(albumsDiary) %>;
+    const timelineData = <%- JSON.stringify(albumsTimeline) %>;
+    // State variables
+    let albums = [...albumsData];
+    let diaries = [...diariesData];
+    let timeline = [...timelineData];
+</script>

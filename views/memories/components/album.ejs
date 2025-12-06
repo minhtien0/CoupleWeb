@@ -1,0 +1,177 @@
+<!-- Album View -->
+<div id="album-view" class="space-y-6">
+    <!-- Stats -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gray-800">Album của chúng ta</h2>
+            <div class="animate-float">💝</div>
+        </div>
+        <div class="grid grid-cols-3 gap-4">
+            <div class="text-center">
+                <div id="stat-photos" class="text-2xl font-bold text-amber-600">247</div>
+                <div class="text-xs text-gray-500">Ảnh</div>
+            </div>
+            <div class="text-center">
+                <div id="stat-albums" class="text-2xl font-bold text-rose-600">18</div>
+                <div class="text-xs text-gray-500">Album</div>
+            </div>
+            <div class="text-center">
+                <div id="stat-videos" class="text-2xl font-bold text-emerald-600">42</div>
+                <div class="text-xs text-gray-500">Video</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Album List -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <h3 class="font-semibold text-gray-800">Album gần đây</h3>
+            <button onclick="viewAllAlbums()" class="text-sm text-amber-600 hover:text-amber-700">Xem tất cả</button>
+        </div>
+        <div id="albums-list" class="space-y-4"></div>
+    </div>
+
+    <!-- Photo Grid -->
+    <div class="space-y-4">
+        <h3 class="font-semibold text-gray-800">Ảnh mới nhất</h3>
+        <div id="recent-photos-grid" class="photo-grid"></div>
+    </div>
+</div>
+
+<script>
+    // ==================== ALBUM SCRIPTS ====================
+    function renderAlbums() {
+        const container = document.getElementById('albums-list');
+        container.innerHTML = '';
+        albums.forEach(a => {
+                    const el = document.createElement('div');
+                    el.className = 'memory-card bg-white rounded-2xl p-4 shadow-sm border border-rose-100 cursor-pointer';
+                    el.onclick = () => openAlbum(a.id);
+                    el.innerHTML = `
+                        <div class="flex items-start space-x-4">
+                            <div class="w-16 h-16 rounded-xl overflow-hidden relative">
+                                ${
+                                    a.photos && a.photos.length > 0
+                                        ? (function(file) {
+                                            const ext = file.split('.').pop().toLowerCase();
+                                            if (['mp4', 'webm', 'ogg'].includes(ext)) {
+                                                return `<div class="w-full h-full bg-gray-200 flex items-center justify-center text-2xl">🎬</div>`;
+                                            } else {
+                                                return `<img src="/uploads/memories/${file}" alt="${a.title}" class="w-full h-full object-cover">`;
+                                            }
+                                        })(a.photos[0])
+                                        : `<div class="w-full h-full bg-gradient-to-br from-rose-200 to-pink-200 flex items-center justify-center text-2xl">📸</div>`
+                                }
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-medium text-gray-800 mb-1">${a.title}</h4>
+                                <p class="text-sm text-gray-600">${formatDateVN(a.date) || ''}</p>
+                            </div>
+                        </div>
+                    `;
+            container.appendChild(el);
+        });
+        const grid = document.getElementById('recent-photos-grid');
+        grid.innerHTML = '';
+
+        // Lấy tất cả photos từ albums, chỉ giữ ảnh (bỏ video)
+        const photos = albums
+            .flatMap(a => a.photos)
+            .filter(p => {
+                const ext = p.split('.').pop().toLowerCase();
+                return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext); // chỉ giữ hình
+            })
+            .slice(0, 6); // lấy 6 ảnh mới nhất
+
+        photos.forEach((p, i) => {
+            const item = document.createElement('div');
+            item.className = 'photo-item bg-gradient-to-br from-rose-200 to-pink-300 rounded-lg loading-shimmer relative';
+            item.innerHTML = `
+                <div class="shimmer-overlay"></div>
+                <img src="/uploads/memories/${p}" alt="photo" class="absolute inset-0 w-full h-full object-cover rounded-lg">
+            `;
+            grid.appendChild(item);
+        });
+
+
+        // stats
+        document.getElementById('stat-albums').textContent = albums.length;
+        const statPhotos = document.getElementById('stat-photos');
+        const statVideos = document.getElementById('stat-videos');
+
+        const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        const videoExts = ['mp4', 'webm', 'ogg'];
+
+        let photoCount = 0;
+        let videoCount = 0;
+
+        albums.forEach(a => {
+            a.photos.forEach(p => {
+                const ext = p.split('.').pop().toLowerCase();
+                if (imageExts.includes(ext)) photoCount++;
+                else if (videoExts.includes(ext)) videoCount++;
+            });
+        });
+
+        statPhotos.textContent = photoCount;
+        statVideos.textContent = videoCount;
+    }
+
+    function viewAllAlbums() {
+        const html = `
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">Tất cả album</h3>
+                        <button onclick="closeOverlay()" class="text-gray-400">Đóng</button>
+                    </div>
+                    <div class="grid grid-cols-1 gap-3">
+                        ${albums.map(a=>`
+                            <div class='p-3 rounded-lg border bg-white flex items-center justify-between cursor-pointer' onclick="openAlbum('${a.id}')">
+                                <div>
+                                    <div class='font-medium text-gray-800'>${a.title}</div>
+                                    <div class='text-xs text-gray-500'>${formatDateVN(a.date)}</div>
+                                </div>
+                                <div class='text-xs text-gray-400'>${a.photos.length} ảnh</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            showOverlay(html);
+        }
+
+        function openAlbum(id) {
+            const a = albums.find(x => x.id === id);
+            if (!a) return;
+            const html = `
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">${a.title}</h3>
+                        <button onclick="closeOverlay()" class="text-gray-400">Đóng</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                       ${a.photos.map(p => {
+                    const ext = p.split('.').pop().toLowerCase();
+                    if (['mp4', 'webm', 'ogg'].includes(ext)) {
+                        return `
+                        <div class="rounded-lg overflow-hidden bg-gray-100">
+                            <video src="/uploads/memories/${p}" class="w-full h-32 object-cover" controls></video>
+                        </div>
+                        `;
+                    } else {
+                        return `
+                        <div class="rounded-lg overflow-hidden bg-gray-100">
+                            <img src="/uploads/memories/${p}" alt="photo" class="w-full h-32 object-cover">
+                        </div>
+                        `;
+                    }
+                }).join('')}
+                </div>
+                    <div class="mt-4 text-right">
+                        <button onclick="closeOverlay()" class="px-4 py-2 rounded-md bg-gray-100">Đóng</button>
+                    </div>
+                </div>
+            `;
+            showOverlay(html);
+        }
+</script>

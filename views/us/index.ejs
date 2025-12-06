@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Couple App - Us</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        window.APP_USER = <%- JSON.stringify(session.user || null) %>;
+    </script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'heartbeat': 'heartbeat 1.5s ease-in-out infinite',
+                        'wiggle': 'wiggle 1s ease-in-out infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @keyframes heartbeat {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+        
+        @keyframes wiggle {
+            0%,
+            100% {
+                transform: rotate(0deg);
+            }
+            25% {
+                transform: rotate(-3deg);
+            }
+            75% {
+                transform: rotate(3deg);
+            }
+        }
+        
+        .realtime-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -60%) scale(0.9);
+            background: white;
+            width: 80%;
+            max-width: 320px;
+            padding: 18px 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        /* Hiện lên */
+        
+        .realtime-popup.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        /* Ẩn đi */
+        
+        .realtime-popup.hide {
+            opacity: 0;
+            transform: translate(-50%, -40%) scale(0.9);
+        }
+        
+        .couple-avatar {
+            transition: all 0.3s ease;
+        }
+        
+        .couple-avatar:hover {
+            transform: scale(1.05);
+        }
+        
+        .settings-item {
+            transition: all 0.2s ease;
+        }
+        
+        .settings-item:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+            transform: translateX(4px);
+        }
+        
+        .expense-card {
+            transition: all 0.3s ease;
+        }
+        
+        .expense-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .balance-positive {
+            color: #059669;
+        }
+        
+        .balance-negative {
+            color: #dc2626;
+        }
+        
+        .balance-zero {
+            color: #6b7280;
+        }
+        
+        .connecting-line {
+            background: linear-gradient(90deg, #f97316, #ec4899);
+            height: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .connecting-line::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% {
+                left: -100%;
+            }
+            100% {
+                left: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-indigo-50 to-pink-50 font-sans">
+
+    <!-- Header -->
+    <div class="bg-white/80 backdrop-blur-sm border-b border-rose-100 sticky top-0 z-20">
+        <div class="max-w-md mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white animate-heartbeat" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-semibold text-gray-800">Chúng mình</h1>
+                        <p class="text-sm text-gray-600">Hồ sơ & cài đặt</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="window.location.href='/profile'" class="p-2 bg-indigo-100 rounded-lg hover:bg-indigo-200 transition-colors">
+                        <svg class="w-5 h-5 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-md mx-auto px-4 py-6 space-y-6 pb-24">
+
+        <!-- Couple Profile -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-pink-100 to-purple-100 rounded-full -translate-y-16 translate-x-16 opacity-50"></div>
+            <div class="relative">
+                <!-- Couple Avatars -->
+                <div class="flex items-center justify-center mb-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="couple-avatar">
+                            <div class="w-20 h-20 bg-gradient-to-r from-rose-400 to-pink-400 rounded-full flex items-center justify-center">
+                                <%if(coupleInfo.user1_gender === 'Nam'){%>
+                                    <span class="text-2xl">👨</span>
+                                    <%}else{%>
+                                        <span class="text-2xl">👩</span>
+                                        <%}%>
+                            </div>
+                            <p class="text-sm font-medium text-gray-800 mt-2 text-center">
+                                <%=coupleInfo.user1_name%>
+                            </p>
+                        </div>
+
+                        <div class="connecting-line w-8 mx-2 relative">
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-xl animate-heartbeat">💕</div>
+                        </div>
+
+                        <div class="couple-avatar">
+                            <div class="w-20 h-20 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full flex items-center justify-center">
+                                <%if(coupleInfo.user2_gender === 'Nam'){%>
+                                    <span class="text-2xl">👨</span>
+                                    <%}else{%>
+                                        <span class="text-2xl">👩</span>
+                                        <%}%>
+                            </div>
+                            <p class="text-sm font-medium text-gray-800 mt-2 text-center">
+                                <%=coupleInfo.user2_name%>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Relationship Info -->
+                <div class="text-center mb-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-2">
+                        <%=coupleInfo.user1_name%> &
+                            <%=coupleInfo.user2_name%>
+                    </h2>
+                    <div class="flex items-center justify-center space-x-4 text-sm text-gray-600">
+                        <div class="flex items-center space-x-1">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12,6 12,12 16,14"></polyline>
+                            </svg>
+                            <%
+                            function formatDateVN(dateStr) {
+                                if (!dateStr) return '';
+                                const d = new Date(dateStr);
+                                if (isNaN(d)) return dateStr;
+                                const dd = String(d.getDate()).padStart(2, '0');
+                                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                                const yyyy = d.getFullYear();
+                                return `${dd}/${mm}/${yyyy}`;
+                            }
+                            const start = new Date(coupleInfo.started_at_couple);
+                            const today = new Date();
+                            const diff = Math.floor((today - start) / (1000*60*60*24));
+                            %>
+                                <span><%=diff%> ngày</span>
+                        </div>
+                        <div class="w-1 h-1 bg-gray-400 rounded-full"></div>
+                        <div class="flex items-center space-x-1">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                            <span>Từ <%=formatDateVN(coupleInfo.started_at_couple)%></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-rose-600">
+                            <%=totalAlbum%>
+                        </div>
+                        <div class="text-xs text-gray-500">Ảnh chung</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-emerald-600">
+                            <%=totalDate%>
+                        </div>
+                        <div class="text-xs text-gray-500">Buổi hẹn</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-amber-600">
+                            <%=coupleInfo.max_streak%>
+                        </div>
+                        <div class="text-xs text-gray-500">Chuỗi ngày</div>
+                    </div>
+                </div>
+
+                <!-- Edit Profile Button -->
+                <button onclick="editProfile()" class="w-full bg-gradient-to-r from-indigo-400 to-purple-400 text-white py-3 rounded-xl font-medium hover:shadow-lg transition-all">
+                    ✏️ Chỉnh sửa hồ sơ
+                </button>
+            </div>
+        </div>
+
+        <!-- Expense Summary -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Chia sẻ chi phí</h2>
+                <button onclick="viewAllExpenses()" class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">Xem chi tiết</button>
+            </div>
+
+            <!-- Balance Overview -->
+            <div class="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-xl p-4 mb-4">
+                <div class="text-center">
+                    <div class="text-sm text-gray-600 mb-1">Tổng chi tiêu tháng này</div>
+                    <div class="text-2xl font-bold text-gray-800">
+                        <%= totalThisMonth.toLocaleString() %>₫</div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mt-4">
+                    <div class="text-center">
+                        <div class="text-lg font-semibold text-rose-600">
+                            <%= totalUser1.toLocaleString() %>₫</div>
+                        <div class="text-xs text-gray-500">
+                            <%= coupleInfo.user1_name %> đã trả</div>
+                    </div>
+
+                    <div class="text-center">
+                        <div class="text-lg font-semibold text-blue-600">
+                            <%= totalUser2.toLocaleString() %>₫</div>
+                        <div class="text-xs text-gray-500">
+                            <%= coupleInfo.user2_name %> đã trả</div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-3">
+                    <div class="text-sm text-emerald-600 font-medium">
+                        Chênh lệch:
+                        <%= difference.toLocaleString() %>₫
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Recent Expenses -->
+            <div class="space-y-3">
+                <h3 class="font-medium text-gray-800">Chi tiêu gần đây</h3>
+                <% if (getCost.length > 0) { %>
+
+                    <% getCost.forEach(item => { %>
+                        <% 
+            // Format ngày trong EJS
+            const d = new Date(item.date_time);
+            const formattedDate = ("0" + d.getDate()).slice(-2) + "/" +
+                                  ("0" + (d.getMonth() + 1)).slice(-2) + "/" +
+                                  d.getFullYear();
+        %>
+
+                            <div class="expense-card flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center">
+                                        <span class="text-lg">
+                                                <% if (item.type === "Ăn uống") { %>
+                                                    🍽️
+                                                <% } else if (item.type === "Giải trí") { %>
+                                                    🎬
+                                                <% } else if (item.type === "Di chuyển") { %>
+                                                    🚗
+                                                <% } else if (item.type === "Mua sắm") { %>
+                                                    🛍️
+                                                <% } else if (item.type === "Du lịch") { %>
+                                                    ✈️
+                                                <% } else { %>
+                                                    💳
+                                                <% } %></span>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-gray-800">
+                                            <%= item.title %>
+                                        </h4>
+                                        <p class="text-sm text-gray-500">
+                                            <%= formattedDate %> •
+                                                <%= item.user_id === coupleInfo.user1_id ? coupleInfo.user1_name : coupleInfo.user2_name%> trả</p>
+                                    </div>
+                                </div>
+
+                                <div class="text-right">
+                                    <div class="font-semibold text-gray-800">
+                                        <%= item.money.toLocaleString() %>₫</div>
+                                    <div class="text-xs text-rose-600">+???₫</div>
+                                </div>
+                            </div>
+                            <% }) %>
+
+                                <% } else { %>
+
+                                    <p class="text-center text-gray-500">Chưa có chi phí nào !</p>
+
+                                    <% } %>
+
+            </div>
+
+            <button onclick="addExpense()" class="w-full mt-4 border-2 border-indigo-200 text-indigo-600 py-3 rounded-xl font-medium hover:bg-indigo-50 transition-colors">
+                + Thêm chi phí
+            </button>
+        </div>
+
+        <!-- Add Expense Modal -->
+        <div id="expense-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 hidden">
+            <div class="flex items-end sm:items-center justify-center min-h-screen p-4">
+                <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md transform transition-all">
+                    <div class="p-6 border-b border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-800">Thêm chi phí mới</h3>
+                            <button onclick="closeExpenseModal()" class="p-2 text-gray-400 hover:text-gray-600">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tên chi phí</label>
+                            <input type="text" id="expense-name" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="VD: Dinner, Xem phim...">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Số tiền</label>
+                                <input type="number" id="expense-amount" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="0">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Người trả</label>
+                                <select id="expense-payer" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="<%= coupleInfo.user1_id %>"><%=coupleInfo.user1_name%></option>
+                                <option value="<%= coupleInfo.user2_id %>"><%=coupleInfo.user2_name%></option>
+                            </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Loại chi phí</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button type="button" onclick="selectExpenseCategory('Ăn uống')" class="expense-category-btn p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-center">
+                                <div class="text-lg mb-1">🍽️</div>
+                                <div class="text-xs">Ăn uống</div>
+                            </button>
+                                <button type="button" onclick="selectExpenseCategory('Giải trí')" class="expense-category-btn p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-center">
+                                <div class="text-lg mb-1">🎬</div>
+                                <div class="text-xs">Giải trí</div>
+                            </button>
+                                <button type="button" onclick="selectExpenseCategory('Di chuyển')" class="expense-category-btn p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-center">
+                                <div class="text-lg mb-1">🚗</div>
+                                <div class="text-xs">Di chuyển</div>
+                            </button>
+                                <button type="button" onclick="selectExpenseCategory('Mua sắm')" class="expense-category-btn p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-center">
+                                <div class="text-lg mb-1">🛍️</div>
+                                <div class="text-xs">Mua sắm</div>
+                            </button>
+                                <button type="button" onclick="selectExpenseCategory('Du lịch')" class="expense-category-btn p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-center">
+                                <div class="text-lg mb-1">✈️</div>
+                                <div class="text-xs">Du lịch</div>
+                            </button>
+                                <button type="button" onclick="selectExpenseCategory('Khác')" class="expense-category-btn p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-center">
+                                <div class="text-lg mb-1">💳</div>
+                                <div class="text-xs">Khác</div>
+                            </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Ghi chú</label>
+                            <textarea id="expense-note" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" rows="2" placeholder="Ghi chú thêm..."></textarea>
+                        </div>
+                    </div>
+                    <div class="p-6 border-t border-gray-100">
+                        <div class="flex space-x-3">
+                            <button onclick="closeExpenseModal()" class="flex-1 py-3 px-4 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                            Hủy
+                        </button>
+                            <button onclick="addNewExpense(event)" class="flex-1 py-3 px-4 bg-gradient-to-r from-indigo-400 to-purple-400 text-white rounded-xl font-medium hover:shadow-lg transition-all">
+                            Thêm chi phí
+                        </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <%- include('../layouts/footer') %>
+
+            <script>
+                // State variables
+                let selectedExpenseCategory = null;
+                let expenses = [{
+                    id: 1,
+                    name: "Dinner Bitexco",
+                    amount: 650000,
+                    payer: "An",
+                    category: "food",
+                    date: "2025-08-31",
+                    note: "Skydeck dinner"
+                }, {
+                    id: 2,
+                    name: "Vé xem phim",
+                    amount: 240000,
+                    payer: "Minh",
+                    category: "entertainment",
+                    date: "2025-08-29",
+                    note: "Avatar 3"
+                }];
+
+                // Profile functions
+                function editProfile() {
+                    alert('Chỉnh sửa hồ sơ:\n\n• Thay đổi avatar\n• Cập nhật thông tin cá nhân\n• Chỉnh sửa ngày kỷ niệm\n• Thêm ảnh bìa couple');
+                }
+
+                // Settings functions
+                function openSettings() {
+                    alert('Mở cài đặt tổng quan của ứng dụng');
+                }
+
+                function openNotificationSettings() {
+                    alert('Cài đặt thông báo:\n\n• Nhắc nhở buổi hẹn\n• Thông báo kỷ niệm\n• Cảnh báo streak sắp mất\n• Thử thách hàng tuần');
+                }
+
+                function openPrivacySettings() {
+                    alert('Cài đặt quyền riêng tư:\n\n• Khóa album riêng tư\n• Mật khẩu ứng dụng\n• Quyền xem nội dung\n• Chia sẻ với bạn bè');
+                }
+
+                function openBackupSettings() {
+                    alert('Sao lưu dữ liệu:\n\n• Tự động sao lưu lên cloud\n• Xuất dữ liệu\n• Khôi phục từ bản sao lưu\n• Đồng bộ giữa thiết bị');
+                }
+
+                function openCoupleSettings() {
+                    alert('Quản lý cặp đôi:\n\n• Kết nối với partner\n• Thay đổi couple code\n• Ngắt kết nối\n• Xóa tài khoản couple');
+                }
+
+                function openAppSettings() {
+                    alert('Cài đặt ứng dụng:\n\n• Giao diện tối/sáng\n• Ngôn ngữ\n• Múi giờ\n• Về chúng tôi');
+                }
+
+                // Couple code functions
+                function copyCode() {
+                    navigator.clipboard.writeText('LOVE2025').then(() => {
+                        const button = event.target;
+                        const originalText = button.textContent;
+                        button.textContent = '✅ Đã copy!';
+                        setTimeout(() => {
+                            button.textContent = originalText;
+                        }, 2000);
+                    });
+                }
+
+                function shareCode() {
+                    if (navigator.share) {
+                        navigator.share({
+                            title: 'Couple App - Kết nối với tôi',
+                            text: 'Hãy tải Couple App và sử dụng mã: LOVE2025 để kết nối với tôi! 💕',
+                            url: window.location.href
+                        });
+                    } else {
+                        copyCode();
+                        alert('Mã đã được copy! Hãy chia sẻ cho người yêu của bạn 💕');
+                    }
+                }
+
+                // Expense functions
+                function viewAllExpenses() {
+                    alert('Xem tất cả chi phí:\n\n• Thống kê theo tháng/năm\n• Biểu đồ chi tiêu\n• Danh sách đầy đủ\n• Xuất báo cáo');
+                }
+
+                function addExpense() {
+                    document.getElementById('expense-modal').classList.remove('hidden');
+                }
+
+                function closeExpenseModal() {
+                    document.getElementById('expense-modal').classList.add('hidden');
+                    // Reset form
+                    document.getElementById('expense-name').value = '';
+                    document.getElementById('expense-amount').value = '';
+                    document.getElementById('expense-note').value = '';
+                    selectedExpenseCategory = null;
+                    // Reset category buttons
+                    document.querySelectorAll('.expense-category-btn').forEach(btn => {
+                        btn.classList.remove('bg-indigo-100', 'border-indigo-300');
+                        btn.classList.add('border-gray-300');
+                    });
+                }
+
+                function selectExpenseCategory(category) {
+                    selectedExpenseCategory = category;
+                    // Reset all category buttons
+                    document.querySelectorAll('.expense-category-btn').forEach(btn => {
+                        btn.classList.remove('bg-indigo-100', 'border-indigo-300');
+                        btn.classList.add('border-gray-300');
+                    });
+                    // Highlight selected category
+                    event.target.closest('.expense-category-btn').classList.add('bg-indigo-100', 'border-indigo-300');
+                    event.target.closest('.expense-category-btn').classList.remove('border-gray-300');
+                }
+
+                async function addNewExpense(event) {
+                    const name = document.getElementById('expense-name').value;
+                    const amount = document.getElementById('expense-amount').value;
+                    const payer = document.getElementById('expense-payer').value;
+                    const note = document.getElementById('expense-note').value;
+
+                    if (!name || !amount || !selectedExpenseCategory) {
+                        alert('Vui lòng điền đầy đủ thông tin bắt buộc!');
+                        return;
+                    }
+
+                    const payload = {
+                        title: name,
+                        money: amount,
+                        user_id: payer,
+                        type: selectedExpenseCategory,
+                        date_time: new Date().toISOString().split("T")[0],
+                        note: note
+                    };
+
+                    const button = event.target;
+                    const originalText = button.textContent;
+
+                    try {
+                        const res = await fetch("us/cost/create", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
+                        const data = await res.json();
+
+                        if (data.success) {
+                            alert('Đã thêm chi phí thành công !');
+                            button.textContent = "✅ Đã thêm chi phí!";
+                            button.disabled = true;
+
+                            setTimeout(() => {
+                                closeExpenseModal();
+                                button.textContent = originalText;
+                                button.disabled = false;
+                                location.reload();
+                            }, 800);
+
+                        } else {
+                            alert(data.message || "Thêm thất bại!");
+                        }
+
+                    } catch (err) {
+                        console.error(err);
+                        alert("Lỗi kết nối server!");
+                    }
+                }
+
+                // Support functions
+                function openFAQ() {
+                    alert('Câu hỏi thường gặp:\n\n• Cách kết nối với partner?\n• Làm sao để sao lưu dữ liệu?\n• Tính năng premium có gì?\n• Bảo mật thông tin như thế nào?');
+                }
+
+                function contactSupport() {
+                    alert('Liên hệ hỗ trợ:\n\n📧 Email: support@coupleapp.com\n📱 Hotline: 1900-xxx-xxx\n💬 Live chat: 8h-22h hàng ngày');
+                }
+
+                function rateApp() {
+                    alert('Cảm ơn bạn muốn đánh giá! 🌟\n\nBạn sẽ được chuyển đến App Store/Play Store để đánh giá ứng dụng.');
+                }
+
+                function shareApp() {
+                    if (navigator.share) {
+                        navigator.share({
+                            title: 'Couple App - Ứng dụng cho các cặp đôi',
+                            text: 'Ứng dụng tuyệt vời để quản lý tình yêu! Hãy tải ngay 💕',
+                            url: 'https://coupleapp.com'
+                        });
+                    } else {
+                        alert('Link chia sẻ đã được copy:\nhttps://coupleapp.com\n\nHãy gửi cho bạn bè của bạn! 💕');
+                    }
+                }
+
+                function viewTerms() {
+                    alert('Điều khoản sử dụng của Couple App');
+                }
+
+                function viewPrivacy() {
+                    alert('Chính sách bảo mật của Couple App');
+                }
+
+                // Navigation
+                document.addEventListener('DOMContentLoaded', function() {
+                    const tabs = document.querySelectorAll('[data-tab]');
+                    tabs.forEach(tab => {
+                        tab.addEventListener('click', () => {
+                            if (tab.dataset.tab !== 'Us') {
+                                alert(`Chuyển đến trang ${tab.dataset.tab}`);
+                            }
+                        });
+                    });
+                });
+
+                // Balance calculation
+                function calculateBalance() {
+                    let anTotal = 0,
+                        minhTotal = 0;
+                    expenses.forEach(expense => {
+                        if (expense.payer === 'An') {
+                            anTotal += expense.amount;
+                        } else {
+                            minhTotal += expense.amount;
+                        }
+                    });
+
+                    const totalExpense = anTotal + minhTotal;
+                    const shouldPayEach = totalExpense / 2;
+                    const balance = anTotal - shouldPayEach;
+
+                    return {
+                        anTotal,
+                        minhTotal,
+                        totalExpense,
+                        balance: Math.round(balance),
+                        balanceText: balance > 0 ? `Minh nợ An: ${Math.abs(balance).toLocaleString()}₫` : balance < 0 ? `An nợ Minh: ${Math.abs(balance).toLocaleString()}₫` : 'Đã cân bằng'
+                    };
+                }
+
+                // Initialize page
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Calculate and display balance
+                    const balance = calculateBalance();
+                    console.log('Balance calculated:', balance);
+
+                    // Add some interactive effects
+                    const coupleAvatars = document.querySelectorAll('.couple-avatar');
+                    coupleAvatars.forEach((avatar, index) => {
+                        avatar.addEventListener('mouseenter', () => {
+                            avatar.style.transform = 'scale(1.1) rotate(5deg)';
+                        });
+                        avatar.addEventListener('mouseleave', () => {
+                            avatar.style.transform = 'scale(1) rotate(0deg)';
+                        });
+                    });
+                });
+            </script>
+</body>
+
+</html>

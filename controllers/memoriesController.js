@@ -52,15 +52,12 @@ exports.Index = async(req, res) => {
     res.render("memories/index", { albumsData, albumsDiary, albumsTimeline, coupleInfo });
 };
 
-
-
 exports.createMemory = async(req, res) => {
     try {
         const coupleId = req.session.couple.id;
         const userName = req.session.user.name;
         const { type, title, content, date_time } = req.body;
 
-        // Insert memory
         const [result] = await db.query(
             `INSERT INTO memories (title, content, type,user_name ,date_time, couple_id)
              VALUES (?, ?, ?, ?, ?, ?)`, [title, content, type, userName, date_time, coupleId]
@@ -68,7 +65,6 @@ exports.createMemory = async(req, res) => {
 
         const memoryId = result.insertId;
 
-        // Nếu có file upload → lưu vào image_memories
         if (req.files && req.files.length > 0) {
             for (let file of req.files) {
                 const fileType = file.mimetype.startsWith("video") ? "video" : "image";
@@ -78,6 +74,53 @@ exports.createMemory = async(req, res) => {
                      VALUES (?, ?, ?)`, [memoryId, file.filename, fileType]
                 );
             }
+        }
+
+        const userCode = req.session.user.code;
+        const coupleInfo = await coupleService.getCoupleInfo(userCode);
+        const user1 = coupleInfo.user1_id;
+        const user2 = coupleInfo.user2_id;
+        const currentUser = req.session.user.id;
+        const partnerId = currentUser === user1 ? user2 : user1;
+        const now = new Date();
+        const day = now.toISOString().split('T')[0];
+        const time = now.toTimeString().slice(0, 5);
+        const datetime = `${day} ${time}:00`;
+        const notifTitle = "Người Ấy vừa tạo kỉ niệm mới 💕";
+        const notifContent = `${userName} đã tạo kỉ niệm "${title}" vào ${day} lúc ${time}`;
+        const notifLink = "/memories";
+
+        const [notifResult] = await db.query(
+            `INSERT INTO notifications (user_id, sender_id, type, title, content, link, is_read, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, 0, NOW())`, [partnerId, currentUser, 'new_memories', notifTitle, notifContent, notifLink]
+        );
+        const newNotifId = notifResult.insertId;
+
+        if (global._io && partnerId) {
+            const [rows] = await db.query(
+                `SELECT COUNT(*) AS unread 
+                 FROM notifications 
+                 WHERE user_id = ? AND is_read = 0`, [partnerId]
+            );
+            const unreadCount = rows[0].unread;
+            const notificationPayload = {
+                id: newNotifId,
+                title: notifTitle,
+                message: title,
+                datetime: datetime,
+                location: 'Việt Nam',
+                type: 'new_memories',
+                content: notifContent,
+                link: notifLink,
+                read: false,
+                created_at: new Date().toISOString()
+            };
+
+            global._io.to(`user_${partnerId}`).emit("new_notification", {
+                notification: notificationPayload,
+                unreadCount: unreadCount
+            });
+
         }
 
         res.json({
@@ -98,11 +141,57 @@ exports.createDiary = async(req, res) => {
         const userName = req.session.user.name;
         const { title, content, date_time } = req.body;
 
-        // Insert memory
         await db.query(
             `INSERT INTO memories (title, content, type,user_name, date_time, couple_id)
              VALUES (?, ?, ?, ?, ?,?)`, [title, content, 'diary', userName, date_time, coupleId]
         );
+
+        const userCode = req.session.user.code;
+        const coupleInfo = await coupleService.getCoupleInfo(userCode);
+        const user1 = coupleInfo.user1_id;
+        const user2 = coupleInfo.user2_id;
+        const currentUser = req.session.user.id;
+        const partnerId = currentUser === user1 ? user2 : user1;
+        const now = new Date();
+        const day = now.toISOString().split('T')[0];
+        const time = now.toTimeString().slice(0, 5);
+        const datetime = `${day} ${time}:00`;
+        const notifTitle = "Người Ấy vừa viết nhật kí mới vào xem nhé 💕";
+        const notifContent = `${userName} đã tạo nhật kí "${title}" vào ${day} lúc ${time}`;
+        const notifLink = "/memories";
+
+        const [notifResult] = await db.query(
+            `INSERT INTO notifications (user_id, sender_id, type, title, content, link, is_read, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, 0, NOW())`, [partnerId, currentUser, 'new_diary', notifTitle, notifContent, notifLink]
+        );
+        const newNotifId = notifResult.insertId;
+
+        if (global._io && partnerId) {
+            const [rows] = await db.query(
+                `SELECT COUNT(*) AS unread 
+                 FROM notifications 
+                 WHERE user_id = ? AND is_read = 0`, [partnerId]
+            );
+            const unreadCount = rows[0].unread;
+            const notificationPayload = {
+                id: newNotifId,
+                title: notifTitle,
+                message: title,
+                datetime: datetime,
+                location: 'Việt Nam',
+                type: 'new_diary',
+                content: notifContent,
+                link: notifLink,
+                read: false,
+                created_at: new Date().toISOString()
+            };
+
+            global._io.to(`user_${partnerId}`).emit("new_notification", {
+                notification: notificationPayload,
+                unreadCount: unreadCount
+            });
+
+        }
 
         res.json({
             success: true,

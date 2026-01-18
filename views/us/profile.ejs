@@ -346,145 +346,6 @@
             </div>
         </div>
 
-        <!-- Personality Traits -->
-        <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-gray-800">Tính cách</h2>
-                <button onclick="takePersonalityTest()" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
-                    📊 Test tính cách
-                </button>
-            </div>
-            <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Hướng ngoại</span>
-                    <div class="flex-1 mx-4">
-                        <div class="personality-bar w-full" style="--start-color: #fbbf24; --end-color: #f59e0b; width: 75%"></div>
-                    </div>
-                    <span class="text-sm text-gray-600">Hướng nội</span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Cảm tính</span>
-                    <div class="flex-1 mx-4">
-                        <div class="personality-bar w-full" style="--start-color: #f87171; --end-color: #ef4444; width: 60%"></div>
-                    </div>
-                    <span class="text-sm text-gray-600">Lý tính</span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Tự phát</span>
-                    <div class="flex-1 mx-4">
-                        <div class="personality-bar w-full" style="--start-color: #34d399; --end-color: #10b981; width: 80%"></div>
-                    </div>
-                    <span class="text-sm text-gray-600">Có kế hoạch</span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Thực tế</span>
-                    <div class="flex-1 mx-4">
-                        <div class="personality-bar w-full" style="--start-color: #a78bfa; --end-color: #8b5cf6; width: 45%"></div>
-                    </div>
-                    <span class="text-sm text-gray-600">Tưởng tượng</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Lifestyle Preferences -->
-        <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
-            <h2 class="text-lg font-semibold text-gray-800 mb-4">Lối sống</h2>
-            <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                    <span class="text-gray-600">Thức dậy</span>
-                    <input type="time" value="07:00" class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-gray-600">Đi ngủ</span>
-                    <input type="time" value="23:30" class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-gray-600">Tập thể dục</span>
-                    <select class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
-                        <option>3-4 lần/tuần</option>
-                        <option>Hàng ngày</option>
-                        <option>1-2 lần/tuần</option>
-                        <option>Thỉnh thoảng</option>
-                        <option>Không bao giờ</option>
-                    </select>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-gray-600">Ăn uống</span>
-                    <select class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
-                        <option>Ăn chay thỉnh thoảng</option>
-                        <option>Ăn chay hoàn toàn</option>
-                        <option>Ăn tất cả</option>
-                        <option>Ăn kiêng Keto</option>
-                        <option>Ăn clean</option>
-                    </select>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-gray-600">Hút thuốc</span>
-                    <select class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
-                        <option>Không bao giờ</option>
-                        <option>Thỉnh thoảng</option>
-                        <option>Xã giao</option>
-                        <option>Thường xuyên</option>
-                    </select>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-gray-600">Uống rượu</span>
-                    <select class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
-                        <option>Xã giao</option>
-                        <option>Không bao giờ</option>
-                        <option>Thỉnh thoảng</option>
-                        <option>Cuối tuần</option>
-                        <option>Thường xuyên</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <!-- Compatibility Score -->
-        <div class="bg-gradient-to-br from-pink-100 to-purple-100 rounded-2xl p-6 shadow-sm border border-rose-200">
-            <div class="text-center mb-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-2">Độ tương thích</h2>
-                <p class="text-sm text-gray-600">Với Minh</p>
-            </div>
-            <div class="flex items-center justify-center mb-4">
-                <div class="relative">
-                    <svg class="w-32 h-32 transform -rotate-90">
-                        <circle cx="64" cy="64" r="40" stroke="#e5e7eb" stroke-width="6" fill="none" />
-                        <circle cx="64" cy="64" r="40" stroke="url(#gradient)" stroke-width="6" fill="none" 
-                                stroke-linecap="round" class="compatibility-ring" style="--compatibility: 87" />
-                        <defs>
-                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" style="stop-color:#f97316"/>
-                                <stop offset="100%" style="stop-color:#ec4899"/>
-                            </linearGradient>
-                        </defs>
-                    </svg>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span class="text-2xl font-bold text-gray-800">87%</span>
-                        <span class="text-xs text-gray-500">Tương thích</span>
-                    </div>
-                </div>
-            </div>
-            <div class="grid grid-cols-2 gap-4 text-center">
-                <div>
-                    <div class="text-lg font-bold text-emerald-600">92%</div>
-                    <div class="text-xs text-gray-600">Sở thích</div>
-                </div>
-                <div>
-                    <div class="text-lg font-bold text-blue-600">85%</div>
-                    <div class="text-xs text-gray-600">Lối sống</div>
-                </div>
-                <div>
-                    <div class="text-lg font-bold text-purple-600">89%</div>
-                    <div class="text-xs text-gray-600">Tính cách</div>
-                </div>
-                <div>
-                    <div class="text-lg font-bold text-rose-600">83%</div>
-                    <div class="text-xs text-gray-600">Mục tiêu</div>
-                </div>
-            </div>
-        </div>
-
         <!-- About Me -->
         <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
             <div class="flex items-center justify-between mb-4">
@@ -549,33 +410,47 @@ Mình tin rằng tình yêu là hành trình cùng nhau trưởng thành và chi
             </div>
         </div>
 
-        <!-- Questions for Partner -->
-        <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-gray-800">Câu hỏi cho người yêu</h2>
-                <button onclick="addQuestion()" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
-                    ➕ Thêm
-                </button>
+        <!-- Compatibility Score -->
+        <div class="bg-gradient-to-br from-pink-100 to-purple-100 rounded-2xl p-6 shadow-sm border border-rose-200">
+            <div class="text-center mb-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-2">Độ tương thích</h2>
+                <p class="text-sm text-gray-600">Với Minh</p>
             </div>
-            <div class="space-y-3" id="questions-container">
-                <div class="p-4 bg-gradient-to-r from-rose-50 to-pink-50 rounded-xl border-l-4 border-rose-400">
-                    <p class="text-sm text-gray-700 font-medium">Điều gì khiến anh cảm thấy hạnh phúc nhất?</p>
-                    <p class="text-xs text-gray-500 mt-1">Câu hỏi về cảm xúc</p>
+            <div class="flex items-center justify-center mb-4">
+                <div class="relative">
+                    <svg class="w-32 h-32 transform -rotate-90">
+                        <circle cx="64" cy="64" r="40" stroke="#e5e7eb" stroke-width="6" fill="none" />
+                        <circle cx="64" cy="64" r="40" stroke="url(#gradient)" stroke-width="6" fill="none" 
+                                stroke-linecap="round" class="compatibility-ring" style="--compatibility: 87" />
+                        <defs>
+                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#f97316"/>
+                                <stop offset="100%" style="stop-color:#ec4899"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <span class="text-2xl font-bold text-gray-800">87%</span>
+                        <span class="text-xs text-gray-500">Tương thích</span>
+                    </div>
                 </div>
-
-                <div class="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border-l-4 border-blue-400">
-                    <p class="text-sm text-gray-700 font-medium">Anh mong muốn chúng ta sẽ như thế nào trong 5 năm tới?</p>
-                    <p class="text-xs text-gray-500 mt-1">Câu hỏi về tương lai</p>
+            </div>
+            <div class="grid grid-cols-2 gap-4 text-center">
+                <div>
+                    <div class="text-lg font-bold text-emerald-600">92%</div>
+                    <div class="text-xs text-gray-600">Sở thích</div>
                 </div>
-
-                <div class="p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border-l-4 border-emerald-400">
-                    <p class="text-sm text-gray-700 font-medium">Sở thích nào của anh mà em chưa biết?</p>
-                    <p class="text-xs text-gray-500 mt-1">Câu hỏi tìm hiểu</p>
+                <div>
+                    <div class="text-lg font-bold text-blue-600">85%</div>
+                    <div class="text-xs text-gray-600">Lối sống</div>
                 </div>
-
-                <div class="p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl border-l-4 border-purple-400">
-                    <p class="text-sm text-gray-700 font-medium">Anh có muốn cùng em học một kỹ năng mới không?</p>
-                    <p class="text-xs text-gray-500 mt-1">Câu hỏi hoạt động chung</p>
+                <div>
+                    <div class="text-lg font-bold text-purple-600">89%</div>
+                    <div class="text-xs text-gray-600">Tính cách</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-rose-600">83%</div>
+                    <div class="text-xs text-gray-600">Mục tiêu</div>
                 </div>
             </div>
         </div>
@@ -835,45 +710,6 @@ Mình tin rằng tình yêu là hành trình cùng nhau trưởng thành và chi
 
             goalsContainer.appendChild(goalDiv);
             alert(`Đã thêm mục tiêu "${randomGoal.title}"! 🎯`);
-        }
-
-        // Questions management
-        function addQuestion() {
-            const questionTypes = [{
-                question: 'Kỷ niệm đẹp nhất của anh là gì?',
-                type: 'Câu hỏi về ký ức',
-                color: 'rose'
-            }, {
-                question: 'Anh có sợ điều gì không?',
-                type: 'Câu hỏi cá nhân',
-                color: 'blue'
-            }, {
-                question: 'Món ăn yêu thích của anh là gì?',
-                type: 'Câu hỏi sinh hoạt',
-                color: 'emerald'
-            }, {
-                question: 'Anh muốn được tặng quà gì nhất?',
-                type: 'Câu hỏi mong muốn',
-                color: 'purple'
-            }];
-
-            const randomQ = questionTypes[Math.floor(Math.random() * questionTypes.length)];
-            const questionsContainer = document.getElementById('questions-container');
-
-            const questionDiv = document.createElement('div');
-            questionDiv.className = `p-4 bg-gradient-to-r from-${randomQ.color}-50 to-${randomQ.color}-50 rounded-xl border-l-4 border-${randomQ.color}-400`;
-            questionDiv.innerHTML = `
-                <p class="text-sm text-gray-700 font-medium">${randomQ.question}</p>
-                <p class="text-xs text-gray-500 mt-1">${randomQ.type}</p>
-            `;
-
-            questionsContainer.appendChild(questionDiv);
-            alert(`Đã thêm câu hỏi mới! 💭`);
-        }
-
-        // Personality test
-        function takePersonalityTest() {
-            alert('Bài test tính cách Big 5:\n\n🔍 20 câu hỏi tâm lý học\n📊 Phân tích chi tiết 5 khía cạnh\n💡 Gợi ý cải thiện\n❤️ So sánh với người yêu\n\n Bạn có muốn bắt đầu không?');
         }
 
         // Interactive elements

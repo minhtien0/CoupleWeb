@@ -74,7 +74,8 @@ exports.postLogin = async(req, res) => {
                 user: {
                     id: user[0].id,
                     name: user[0].name,
-                    email: user[0].email
+                    email: user[0].email,
+                    code: user[0].code
                 }
             });
         } else {
@@ -85,7 +86,8 @@ exports.postLogin = async(req, res) => {
                 user: {
                     id: user[0].id,
                     name: user[0].name,
-                    email: user[0].email
+                    email: user[0].email,
+                    code: user[0].code
                 }
             });
         }

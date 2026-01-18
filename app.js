@@ -14,15 +14,27 @@ io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
     socket.on("registerUser", (userId) => {
+
+        if (userSockets[userId] && userSockets[userId] !== socket.id) {
+            const oldSocketId = userSockets[userId];
+            io.to(oldSocketId).emit("force_logout");
+
+            const oldSocket = io.sockets.sockets.get(oldSocketId);
+            if (oldSocket) {
+                oldSocket.disconnect(true);
+            }
+        }
+
         userSockets[userId] = socket.id;
-        console.log("Registered user:", userId, "=> socket:", socket.id);
+        socket.userId = userId;
+
+        socket.join(`user_${userId}`);
     });
 
     socket.on("disconnect", () => {
-        for (let uid in userSockets) {
-            if (userSockets[uid] === socket.id) delete userSockets[uid];
+        if (socket.userId) {
+            delete userSockets[socket.userId];
         }
-        console.log("User disconnected");
     });
 });
 // Cho controller dùng io

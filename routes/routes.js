@@ -27,15 +27,15 @@ router.post('/couple/reject/:couples_id', exampleController.rejectInvite);
 router.post('/couple/cancel/:id', exampleController.cancelInvite);
 router.post('/favorite/add', exampleController.addFavorite);
 
-
-
-
 // ===================== CÁC ROUTE CẦN COUPLE =====================
 // Chạy middleware couple cho các trang này
 router.use(['/home', '/date', '/journey', '/memories', '/us'], couple);
 // Trang Home
 router.get('/home', homeController.Index);
 router.post('/home/checkin', homeController.checkin);
+router.get('/api/notifications', homeController.getNotifications);
+router.post('/api/notifications/:id/read', homeController.readNotification);
+
 // ===================== CÁC TRANG CỦA COUPLE =====================
 router.get('/date', dateController.Index);
 router.post('/date/create', dateController.Create);
@@ -60,6 +60,8 @@ router.post('/memories/create/diary', memoriesController.createDiary);
 
 router.get('/us', usController.Index);
 router.post('/us/cost/create', usController.createCost);
+router.get('/us/expenses/export-excel', usController.exportExpensesExcel);
+router.get('/us/statistics', usController.Statistics);
 router.get('/profile', usController.Profile);
 // ===================== KHÁC =====================
 

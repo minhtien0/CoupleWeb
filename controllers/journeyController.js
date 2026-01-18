@@ -136,6 +136,53 @@ exports.createGoal = async(req, res) => {
             (couple_id, title, description, icon, target_value, start_date, end_date, current_value, status, created_at) 
             VALUES (?, ?, ?, ?, ?, ?, ?, 0, 'Đang Thực Hiện', NOW())`, [coupleId, title, description, icon, target_value, start_date, end_date]
         );
+        const userCode = req.session.user.code;
+        const coupleInfo = await coupleService.getCoupleInfo(userCode);
+        const user1 = coupleInfo.user1_id;
+        const user2 = coupleInfo.user2_id;
+        const currentUser = req.session.user.id;
+        const userName = req.session.user.name;
+        const partnerId = currentUser === user1 ? user2 : user1;
+        const now = new Date();
+        const day = now.toISOString().split('T')[0];
+        const time = now.toTimeString().slice(0, 5);
+        const datetime = `${day} ${time}:00`;
+        const notifTitle = "Người Ấy vừa tạo mục tiêu chung 💕";
+        const notifContent = `${userName} đã tạo mục tiêu "${title}" vào ${day} lúc ${time}`;
+        const notifLink = "/journey";
+
+        const [notifResult] = await db.query(
+            `INSERT INTO notifications (user_id, sender_id, type, title, content, link, is_read, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, 0, NOW())`, [partnerId, currentUser, 'new_goal', notifTitle, notifContent, notifLink]
+        );
+        const newNotifId = notifResult.insertId;
+
+        if (global._io && partnerId) {
+            const [rows] = await db.query(
+                `SELECT COUNT(*) AS unread 
+                 FROM notifications 
+                 WHERE user_id = ? AND is_read = 0`, [partnerId]
+            );
+            const unreadCount = rows[0].unread;
+            const notificationPayload = {
+                id: newNotifId,
+                title: notifTitle,
+                message: title,
+                datetime: datetime,
+                location: 'Việt Nam',
+                type: 'new_goal',
+                content: notifContent,
+                link: notifLink,
+                read: false,
+                created_at: new Date().toISOString()
+            };
+
+            global._io.to(`user_${partnerId}`).emit("new_notification", {
+                notification: notificationPayload,
+                unreadCount: unreadCount
+            });
+
+        }
 
         return res.json({
             message: "Tạo mục tiêu thành công!"
@@ -210,11 +257,57 @@ exports.createMilestone = async(req, res) => {
         }
 
         const coupleId = req.session.couple.id;
-
+        const userCode = req.session.user.code;
         await db.query(
             `INSERT INTO milestones (couple_id, title, description, location, event_date)
              VALUES (?, ?, ?, ?, ?)`, [coupleId, title, description, location, event_date]
         );
+        const coupleInfo = await coupleService.getCoupleInfo(userCode);
+        const user1 = coupleInfo.user1_id;
+        const user2 = coupleInfo.user2_id;
+        const currentUser = req.session.user.id;
+        const userName = req.session.user.name;
+        const partnerId = currentUser === user1 ? user2 : user1;
+        const now = new Date();
+        const day = now.toISOString().split('T')[0];
+        const time = now.toTimeString().slice(0, 5);
+        const datetime = `${day} ${time}:00`;
+        const notifTitle = "Người Ấy vừa tạo cột mốc quan trọng 💕";
+        const notifContent = `${userName} đã tạo cột mốc "${title}" vào ${day} lúc ${time}`;
+        const notifLink = "/journey";
+
+        const [notifResult] = await db.query(
+            `INSERT INTO notifications (user_id, sender_id, type, title, content, link, is_read, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, 0, NOW())`, [partnerId, currentUser, 'new_journey', notifTitle, notifContent, notifLink]
+        );
+        const newNotifId = notifResult.insertId;
+
+        if (global._io && partnerId) {
+            const [rows] = await db.query(
+                `SELECT COUNT(*) AS unread 
+                 FROM notifications 
+                 WHERE user_id = ? AND is_read = 0`, [partnerId]
+            );
+            const unreadCount = rows[0].unread;
+            const notificationPayload = {
+                id: newNotifId,
+                title: notifTitle,
+                message: title,
+                datetime: datetime,
+                location: location,
+                type: 'new_journey',
+                content: notifContent,
+                link: notifLink,
+                read: false,
+                created_at: new Date().toISOString()
+            };
+
+            global._io.to(`user_${partnerId}`).emit("new_notification", {
+                notification: notificationPayload,
+                unreadCount: unreadCount
+            });
+
+        }
 
         return res.json({ success: true });
 

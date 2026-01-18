@@ -47,6 +47,7 @@ exports.Create = async(req, res) => {
 
         const coupleId = req.session.couple.id;
         const userCode = req.session.user.code;
+        const userName = req.session.user.name;
         const coupleInfo = await coupleService.getCoupleInfo(userCode);
         const user1 = coupleInfo.user1_id;
         const user2 = coupleInfo.user2_id;
@@ -55,19 +56,53 @@ exports.Create = async(req, res) => {
 
         const datetime = `${day} ${time}:00`;
 
-        await db.query(
+        const [dateResult] = await db.query(
             `INSERT INTO date (title, time, location, type, note, couple_id)
              VALUES (?, ?, ?, ?, ?, ?)`, [title, datetime, location, type, note || "", coupleId]
         );
+        const newDateId = dateResult.insertId;
 
-        // Send realtime to partner
+
+        const notifTitle = "Buổi hẹn mới từ đối phương 💕";
+        const notifContent = `${userName} đã tạo buổi hẹn "${title}" vào ${day} lúc ${time}`;
+        const notifLink = "/date";
+
+        const [notifResult] = await db.query(
+            `INSERT INTO notifications (user_id, sender_id, type, title, content, link, is_read, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, 0, NOW())`, [partnerId, currentUser, 'new_date', notifTitle, notifContent, notifLink]
+        );
+        const newNotifId = notifResult.insertId;
+
+
         if (global._io && partnerId) {
-            global._io.to(userSockets[partnerId]).emit("new_date", {
-                title,
-                datetime,
-                location,
-                type
-            });
+            const [rows] = await db.query(
+                `SELECT COUNT(*) AS unread 
+                 FROM notifications 
+                 WHERE user_id = ? AND is_read = 0`, [partnerId]
+            );
+            const unreadCount = rows[0].unread;
+
+            const notificationPayload = {
+                id: newNotifId,
+                title: notifTitle,
+                message: title,
+                datetime: datetime,
+                location: location,
+                type: type,
+                content: notifContent,
+                link: notifLink,
+                read: false,
+                created_at: new Date().toISOString()
+            };
+
+
+            const partnerSocketId = require('../app').userSockets[partnerId];
+            if (partnerSocketId) {
+                global._io.to(`user_${partnerId}`).emit("new_notification", {
+                    notification: notificationPayload,
+                    unreadCount: unreadCount
+                });
+            }
         }
 
         return res.status(200).json({

@@ -95,3 +95,104 @@ exports.checkin = async(req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 };
+
+function timeAgo(date) {
+    const now = new Date();
+    const past = new Date(date);
+    const diffMs = now - past;
+
+    const minute = 60 * 1000;
+    const hour = 60 * minute;
+    const day = 24 * hour;
+    const month = 30 * day;
+    const year = 365 * day;
+
+    if (diffMs < minute) {
+        return "Vừa xong";
+    } else if (diffMs < hour) {
+        const m = Math.floor(diffMs / minute);
+        return `${m} phút trước`;
+    } else if (diffMs < day) {
+        const h = Math.floor(diffMs / hour);
+        return `${h} giờ trước`;
+    } else if (diffMs < month) {
+        const d = Math.floor(diffMs / day);
+        return `${d} ngày trước`;
+    }
+    if (diffMs > 7 * day) {
+        return past.toLocaleDateString("vi-VN");
+    }
+
+}
+
+exports.getNotifications = async(req, res) => {
+    try {
+        const userId = req.session.user.id;
+        const [notifications] = await db.query(
+            `SELECT id, title, content, link, is_read, created_at
+             FROM notifications
+             WHERE user_id = ?
+             ORDER BY created_at DESC
+             LIMIT 20`, [userId]
+        );
+
+        // Đếm chưa đọc
+        const [
+            [count]
+        ] = await db.query(
+            `SELECT COUNT(*) AS unreadCount
+             FROM notifications
+             WHERE user_id = ? AND is_read = 0`, [userId]
+        );
+
+        notifications.forEach(n => {
+            n.time_ago = timeAgo(n.created_at);
+        });
+
+        return res.json({
+            success: true,
+            notifications,
+            unreadCount: count.unreadCount
+        });
+
+    } catch (err) {
+        console.error("❌ Get notifications error:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Không thể tải thông báo"
+        });
+    }
+};
+
+
+exports.readNotification = async(req, res) => {
+    try {
+        const notifId = req.params.id;
+        const userId = req.session.user.id;
+
+        // Cập nhật is_read = 1
+        await db.query(
+            `UPDATE notifications 
+             SET is_read = 1 
+             WHERE id = ? AND user_id = ?`, [notifId, userId]
+        );
+
+        // Lấy số thông báo chưa đọc mới
+        const [rows] = await db.query(
+            `SELECT COUNT(*) AS unread 
+             FROM notifications 
+             WHERE user_id = ? AND is_read = 0`, [userId]
+        );
+
+        return res.json({
+            success: true,
+            unreadCount: rows[0].unread
+        });
+    } catch (error) {
+        console.error("❌ Lỗi đánh dấu đã đọc:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Lỗi server"
+        });
+    }
+}

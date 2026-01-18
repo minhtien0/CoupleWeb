@@ -861,6 +861,10 @@
                 chip.classList.toggle("active");
             });
         });
+        socket.on("force_logout", () => {
+            alert("Tài khoản đã được đăng nhập ở nơi khác!");
+            window.location.href = "/";
+        });
     </script>
 </body>
 

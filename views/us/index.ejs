@@ -279,8 +279,8 @@
                 </div>
 
                 <!-- Edit Profile Button -->
-                <button onclick="editProfile()" class="w-full bg-gradient-to-r from-indigo-400 to-purple-400 text-white py-3 rounded-xl font-medium hover:shadow-lg transition-all">
-                    ✏️ Chỉnh sửa hồ sơ
+                <button class="w-full bg-gradient-to-r from-indigo-400 to-purple-400 text-white py-3 rounded-xl font-medium hover:shadow-lg transition-all">
+                    ✏️ Thống kê chi tiết
                 </button>
             </div>
         </div>
@@ -289,7 +289,11 @@
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-semibold text-gray-800">Chia sẻ chi phí</h2>
-                <button onclick="viewAllExpenses()" class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">Xem chi tiết</button>
+                <a href="/us/expenses/export-excel" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-sm font-medium rounded-xl hover:from-pink-600 hover:to-purple-600 transition-shadow shadow-md hover:shadow-lg">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg> Xuất thống kê Excel 💕
+                </a>
             </div>
 
             <!-- Balance Overview -->
@@ -548,10 +552,6 @@
                     }
                 }
 
-                // Expense functions
-                function viewAllExpenses() {
-                    alert('Xem tất cả chi phí:\n\n• Thống kê theo tháng/năm\n• Biểu đồ chi tiêu\n• Danh sách đầy đủ\n• Xuất báo cáo');
-                }
 
                 function addExpense() {
                     document.getElementById('expense-modal').classList.remove('hidden');

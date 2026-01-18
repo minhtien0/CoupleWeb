@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Couple App - Thống kê</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .heatmap-cell {
+            transition: all 0.2s ease;
+        }
+        .heatmap-cell:hover {
+            transform: scale(1.2);
+            z-index: 10;
+        }
+        .radar-chart {
+            position: relative;
+        }
+        .emotion-wave {
+            animation: wave 3s ease-in-out infinite;
+        }
+        @keyframes wave {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .timeline-dot {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.95); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 font-sans">
+    
+    <!-- Header -->
+    <div class="bg-white/80 backdrop-blur-sm border-b border-rose-100 sticky top-0 z-20">
+        <div class="max-w-4xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <button onclick="goBack()" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                        <svg class="w-5 h-5 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15,18 9,12 15,6"></polyline>
+                        </svg>
+                    </button>
+                    <div>
+                        <h1 class="text-lg font-semibold text-gray-800">Thống kê chi tiết</h1>
+                        <p class="text-sm text-gray-600">Phân tích sâu mối quan hệ</p>
+                    </div>
+                </div>
+                <select class="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm">
+                    <option>Tháng này</option>
+                    <option>3 tháng</option>
+                    <option>Tất cả</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto px-4 py-6 space-y-6 pb-24">
+        
+        <!-- Relationship Health Score -->
+        <div class="bg-gradient-to-r from-pink-500 to-purple-500 rounded-3xl p-8 text-white relative overflow-hidden">
+            <div class="absolute top-0 right-0 opacity-10">
+                <svg class="w-64 h-64" viewBox="0 0 200 200">
+                    <path fill="white" d="M100,10 Q150,50 100,100 Q50,50 100,10 M100,100 Q150,150 100,190 Q50,150 100,100"></path>
+                </svg>
+            </div>
+            <div class="relative">
+                <h2 class="text-sm font-medium text-pink-100 mb-2">Chỉ số sức khỏe mối quan hệ</h2>
+                <div class="flex items-end space-x-4 mb-6">
+                    <div class="text-6xl font-bold">8.7</div>
+                    <div class="mb-3">
+                        <div class="text-sm text-pink-100">/ 10 điểm</div>
+                        <div class="flex items-center space-x-1 text-xs">
+                            <span>↑</span>
+                            <span>+0.3 so với tháng trước</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-4 gap-3">
+                    <div class="bg-white/20 rounded-lg p-3 backdrop-blur-sm">
+                        <div class="text-2xl mb-1">💬</div>
+                        <div class="text-xs text-pink-100">Giao tiếp</div>
+                        <div class="text-lg font-bold">9.2</div>
+                    </div>
+                    <div class="bg-white/20 rounded-lg p-3 backdrop-blur-sm">
+                        <div class="text-2xl mb-1">🤝</div>
+                        <div class="text-xs text-pink-100">Tin tưởng</div>
+                        <div class="text-lg font-bold">9.0</div>
+                    </div>
+                    <div class="bg-white/20 rounded-lg p-3 backdrop-blur-sm">
+                        <div class="text-2xl mb-1">❤️</div>
+                        <div class="text-xs text-pink-100">Tình cảm</div>
+                        <div class="text-lg font-bold">8.8</div>
+                    </div>
+                    <div class="bg-white/20 rounded-lg p-3 backdrop-blur-sm">
+                        <div class="text-2xl mb-1">⏰</div>
+                        <div class="text-xs text-pink-100">Thời gian</div>
+                        <div class="text-lg font-bold">7.5</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Heatmap -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Bản đồ hoạt động</h2>
+            <p class="text-sm text-gray-600 mb-6">Những ngày nào bạn dành nhiều thời gian nhất cho nhau</p>
+            
+            <div class="space-y-2">
+                <div class="flex items-center space-x-2">
+                    <div class="text-xs text-gray-500 w-8">T2</div>
+                    <div class="flex space-x-1 flex-1">
+                        <div class="heatmap-cell w-full h-8 bg-rose-100 rounded cursor-pointer" title="1h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-200 rounded cursor-pointer" title="2h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-300 rounded cursor-pointer" title="3h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-500 rounded cursor-pointer" title="5h"></div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="text-xs text-gray-500 w-8">T3</div>
+                    <div class="flex space-x-1 flex-1">
+                        <div class="heatmap-cell w-full h-8 bg-rose-200 rounded cursor-pointer" title="2h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-400 rounded cursor-pointer" title="4h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-300 rounded cursor-pointer" title="3h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-200 rounded cursor-pointer" title="2h"></div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="text-xs text-gray-500 w-8">T4</div>
+                    <div class="flex space-x-1 flex-1">
+                        <div class="heatmap-cell w-full h-8 bg-rose-100 rounded cursor-pointer" title="1h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-100 rounded cursor-pointer" title="1h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-300 rounded cursor-pointer" title="3h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-400 rounded cursor-pointer" title="4h"></div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="text-xs text-gray-500 w-8">T5</div>
+                    <div class="flex space-x-1 flex-1">
+                        <div class="heatmap-cell w-full h-8 bg-rose-200 rounded cursor-pointer" title="2h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-300 rounded cursor-pointer" title="3h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-500 rounded cursor-pointer" title="5h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-300 rounded cursor-pointer" title="3h"></div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="text-xs text-gray-500 w-8">T6</div>
+                    <div class="flex space-x-1 flex-1">
+                        <div class="heatmap-cell w-full h-8 bg-rose-400 rounded cursor-pointer" title="4h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-600 rounded cursor-pointer" title="6h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-500 rounded cursor-pointer" title="5h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-400 rounded cursor-pointer" title="4h"></div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="text-xs text-gray-500 w-8">T7</div>
+                    <div class="flex space-x-1 flex-1">
+                        <div class="heatmap-cell w-full h-8 bg-rose-600 rounded cursor-pointer" title="7h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-700 rounded cursor-pointer" title="8h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-600 rounded cursor-pointer" title="6h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-500 rounded cursor-pointer" title="5h"></div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="text-xs text-gray-500 w-8">CN</div>
+                    <div class="flex space-x-1 flex-1">
+                        <div class="heatmap-cell w-full h-8 bg-rose-700 rounded cursor-pointer" title="9h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-800 rounded cursor-pointer" title="10h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-600 rounded cursor-pointer" title="7h"></div>
+                        <div class="heatmap-cell w-full h-8 bg-rose-500 rounded cursor-pointer" title="5h"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex items-center justify-between mt-4 text-xs text-gray-500">
+                <span>Ít hơn</span>
+                <div class="flex space-x-1">
+                    <div class="w-4 h-4 bg-rose-100 rounded"></div>
+                    <div class="w-4 h-4 bg-rose-300 rounded"></div>
+                    <div class="w-4 h-4 bg-rose-500 rounded"></div>
+                    <div class="w-4 h-4 bg-rose-700 rounded"></div>
+                </div>
+                <span>Nhiều hơn</span>
+            </div>
+        </div>
+
+        <!-- Emotional Timeline -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Biểu đồ cảm xúc</h2>
+            <p class="text-sm text-gray-600 mb-6">Theo dõi cảm xúc của cả hai trong tháng qua</p>
+            
+            <div class="relative h-64">
+                <!-- Grid lines -->
+                <div class="absolute inset-0 flex flex-col justify-between">
+                    <div class="border-t border-gray-100"></div>
+                    <div class="border-t border-gray-100"></div>
+                    <div class="border-t border-gray-200"></div>
+                    <div class="border-t border-gray-100"></div>
+                    <div class="border-t border-gray-100"></div>
+                </div>
+                
+                <!-- Y-axis labels -->
+                <div class="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-xs text-gray-500">
+                    <span>😊 Vui</span>
+                    <span>😌 Bình thường</span>
+                    <span>😔 Buồn</span>
+                </div>
+                
+                <!-- Emotion lines -->
+                <svg class="w-full h-full pl-12" viewBox="0 0 400 200" preserveAspectRatio="none">
+                    <!-- An's emotion line -->
+                    <path d="M 0,80 Q 50,60 100,70 T 200,65 T 300,50 T 400,45" 
+                          fill="none" stroke="#f87171" stroke-width="3" opacity="0.8"/>
+                    <!-- Minh's emotion line -->
+                    <path d="M 0,90 Q 50,85 100,75 T 200,70 T 300,60 T 400,55" 
+                          fill="none" stroke="#8b5cf6" stroke-width="3" opacity="0.8"/>
+                </svg>
+                
+                <!-- Legend -->
+                <div class="absolute bottom-0 right-0 flex space-x-4 text-xs">
+                    <div class="flex items-center space-x-1">
+                        <div class="w-3 h-3 bg-rose-400 rounded-full"></div>
+                        <span class="text-gray-600">An</span>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+                        <span class="text-gray-600">Minh</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Key moments -->
+            <div class="mt-6 space-y-2">
+                <div class="flex items-center space-x-3 p-3 bg-rose-50 rounded-lg">
+                    <span class="text-2xl">📅</span>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-gray-800">15/08 - Du lịch Đà Lạt</div>
+                        <div class="text-xs text-gray-600">Cảm xúc tích cực cao nhất tháng</div>
+                    </div>
+                    <div class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">+12%</div>
+                </div>
+                <div class="flex items-center space-x-3 p-3 bg-amber-50 rounded-lg">
+                    <span class="text-2xl">💼</span>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-gray-800">22/08 - Công việc căng thẳng</div>
+                        <div class="text-xs text-gray-600">Giai đoạn khó khăn nhưng vượt qua tốt</div>
+                    </div>
+                    <div class="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">-5%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Communication Pattern -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Phong cách giao tiếp</h2>
+            <p class="text-sm text-gray-600 mb-6">Phân tích cách bạn và người ấy trao đổi</p>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- An -->
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-rose-100 rounded-full flex items-center justify-center">
+                            <span class="text-lg">👩</span>
+                        </div>
+                        <h3 class="font-semibold text-gray-800">An</h3>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-600">💬 Tin nhắn text</span>
+                            <span class="font-semibold">65%</span>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-2">
+                            <div class="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full" style="width: 65%"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-600">📞 Gọi điện</span>
+                            <span class="font-semibold">25%</span>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-2">
+                            <div class="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full" style="width: 25%"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-600">🤗 Gặp trực tiếp</span>
+                            <span class="font-semibold">10%</span>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-2">
+                            <div class="h-full bg-gradient-to-r from-purple-400 to-purple-500 rounded-full" style="width: 10%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Minh -->
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span class="text-lg">👨</span>
+                        </div>
+                        <h3 class="font-semibold text-gray-800">Minh</h3>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-600">💬 Tin nhắn text</span>
+                            <span class="font-semibold">45%</span>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-2">
+                            <div class="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full" style="width: 45%"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-600">📞 Gọi điện</span>
+                            <span class="font-semibold">35%</span>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-2">
+                            <div class="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full" style="width: 35%"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-600">🤗 Gặp trực tiếp</span>
+                            <span class="font-semibold">20%</span>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-2">
+                            <div class="h-full bg-gradient-to-r from-purple-400 to-purple-500 rounded-full" style="width: 20%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 p-4 bg-blue-50 rounded-xl">
+                <div class="flex items-start space-x-3">
+                    <span class="text-xl">💡</span>
+                    <div>
+                        <h4 class="font-medium text-gray-800 mb-1">Gợi ý</h4>
+                        <p class="text-sm text-gray-600">Minh thích gọi điện nhiều hơn. Thử gọi cho nhau thường xuyên hơn nhé!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conflict Resolution -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Giải quyết mâu thuẫn</h2>
+            <p class="text-sm text-gray-600 mb-6">Cách bạn vượt qua khó khăn cùng nhau</p>
+            
+            <div class="space-y-4">
+                <div class="flex items-center justify-between p-4 bg-emerald-50 rounded-xl">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold">3</div>
+                        <div>
+                            <div class="font-medium text-gray-800">Bất đồng trong tháng</div>
+                            <div class="text-xs text-gray-600">Giảm 40% so với tháng trước</div>
+                        </div>
+                    </div>
+                    <svg class="w-6 h-6 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"></polyline>
+                    </svg>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
+                        <div class="text-3xl mb-2">⏱️</div>
+                        <div class="text-2xl font-bold text-gray-800">45ph</div>
+                        <div class="text-xs text-gray-600">Thời gian giải quyết trung bình</div>
+                    </div>
+                    <div class="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border border-purple-100">
+                        <div class="text-3xl mb-2">✅</div>
+                        <div class="text-2xl font-bold text-gray-800">100%</div>
+                        <div class="text-xs text-gray-600">Tỷ lệ hòa giải thành công</div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl border border-yellow-200">
+                    <div class="flex items-start space-x-3">
+                        <span class="text-2xl">🏆</span>
+                        <div>
+                            <h4 class="font-medium text-gray-800 mb-1">Điểm mạnh</h4>
+                            <p class="text-sm text-gray-600">Cả hai đều lắng nghe và tôn trọng quan điểm của nhau. Thái độ cởi mở giúp giải quyết vấn đề nhanh chóng.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Transparency -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Minh bạch tài chính</h2>
+            <p class="text-sm text-gray-600 mb-6">Phân tích chi tiêu và đóng góp</p>
+            
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-sm text-gray-600">Tổng chi tiêu chung</span>
+                    <span class="text-2xl font-bold text-gray-800">2.450.000₫</span>
+                </div>
+                <div class="relative h-8 bg-gray-100 rounded-full overflow-hidden">
+                    <div class="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-rose-400 to-rose-500 flex items-center justify-end pr-2" style="width: 53%">
+                        <span class="text-xs text-white font-medium">An: 1.3M</span>
+                    </div>
+                    <div class="absolute right-0 top-0 bottom-0 bg-gradient-to-r from-blue-400 to-blue-500 flex items-center justify-start pl-2" style="width: 47%">
+                        <span class="text-xs text-white font-medium">Minh: 1.15M</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 mb-6">
+                <div class="text-center p-3 bg-rose-50 rounded-lg">
+                    <div class="text-sm font-medium text-rose-700 mb-1">🍽️</div>
+                    <div class="text-lg font-bold text-gray-800">850K</div>
+                    <div class="text-xs text-gray-600">Ăn uống</div>
+                </div>
+                <div class="text-center p-3 bg-purple-50 rounded-lg">
+                    <div class="text-sm font-medium text-purple-700 mb-1">🎬</div>
+                    <div class="text-lg font-bold text-gray-800">340K</div>
+                    <div class="text-xs text-gray-600">Giải trí</div>
+                </div>
+                <div class="text-center p-3 bg-emerald-50 rounded-lg">
+                    <div class="text-sm font-medium text-emerald-700 mb-1">✈️</div>
+                    <div class="text-lg font-bold text-gray-800">1.26M</div>
+                    <div class="text-xs text-gray-600">Du lịch</div>
+                </div>
+            </div>
+
+            <div class="p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20,6 9,17 4,12"></polyline>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800">Cân bằng tốt</div>
+                            <div class="text-sm text-gray-600">Sự đóng góp công bằng</div>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-emerald-700">+6%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Growth Together -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Cùng nhau phát triển</h2>
+            <p class="text-sm text-gray-600 mb-6">Những kỹ năng và thói quen tích cực</p>
+            
+            <div class="space-y-4">
+                <div class="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">📚</span>
+                            <div>
+                                <h4 class="font-medium text-gray-800">Đọc sách cùng nhau</h4>
+                                <p class="text-xs text-gray-600">Hoạt động mới trong 2 tháng</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-lg font-bold text-blue-700">5</div>
+                            <div class="text-xs text-gray-600">cuốn/tháng</div>
+                        </div>
+                    </div>
+                    <div class="w-full bg-blue-100 rounded-full h-2">
+                        <div class="h-full bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full" style="width: 83%"></div>
+                    </div>
+                    <div class="text-xs text-gray-600 mt-2">Mục tiêu: 6 cuốn/tháng</div>
+                </div>
+
+                <div class="p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-200">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">🏃‍♀️</span>
+                            <div>
+                                <h4 class="font-medium text-gray-800">Chạy bộ buổi sáng</h4>
+                                <p class="text-xs text-gray-600">Thói quen được duy trì 3 tháng</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-lg font-bold text-emerald-700">4x</div>
+                            <div class="text-xs text-gray-600">lần/tuần</div>
+                        </div>
+                    </div>
+                    <div class="w-full bg-emerald-100 rounded-full h-2">
+                        <div class="h-full bg-gradient-to-r from-emerald-400 to-green-500 rounded-full" style="width: 100%"></div>
+                    </div>
+                    <div class="text-xs text-gray-600 mt-2">✅ Đã đạt mục tiêu tuần này</div>
+                </div>
+
+                <div class="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">👨‍🍳</span>
+                            <div>
+                                <h4 class="font-medium text-gray-800">Nấu ăn cùng nhau</h4>
+                                <p class="text-xs text-gray-600">Hoạt động cuối tuần</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-lg font-bold text-purple-700">3</div>
+                            <div class="text-xs text-gray-600">món mới/tuần</div>
+                        </div>
+                    </div>
+                    <div class="w-full bg-purple-100 rounded-full h-2">
+                        <div class="h-full bg-gradient-to-r from-purple-400 to-pink-500 rounded-full" style="width: 60%"></div>
+                    </div>
+                    <div class="text-xs text-gray-600 mt-2">Mục tiêu: 5 món mới/tuần</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personality Compatibility Radar -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Tương thích tính cách</h2>
+            <p class="text-sm text-gray-600 mb-6">So sánh đa chiều giữa hai người</p>
+            
+            <div class="relative h-64 mb-6">
+                <!-- Radar Chart Background -->
+                <svg class="w-full h-full" viewBox="0 0 200 200">
+                    <!-- Grid circles -->
+                    <circle cx="100" cy="100" r="80" fill="none" stroke="#f3f4f6" stroke-width="1"/>
+                    <circle cx="100" cy="100" r="60" fill="none" stroke="#f3f4f6" stroke-width="1"/>
+                    <circle cx="100" cy="100" r="40" fill="none" stroke="#f3f4f6" stroke-width="1"/>
+                    <circle cx="100" cy="100" r="20" fill="none" stroke="#f3f4f6" stroke-width="1"/>
+                    
+                    <!-- Axis lines -->
+                    <line x1="100" y1="100" x2="100" y2="20" stroke="#e5e7eb" stroke-width="1"/>
+                    <line x1="100" y1="100" x2="169" y2="60" stroke="#e5e7eb" stroke-width="1"/>
+                    <line x1="100" y1="100" x2="169" y2="140" stroke="#e5e7eb" stroke-width="1"/>
+                    <line x1="100" y1="100" x2="100" y2="180" stroke="#e5e7eb" stroke-width="1"/>
+                    <line x1="100" y1="100" x2="31" y2="140" stroke="#e5e7eb" stroke-width="1"/>
+                    <line x1="100" y1="100" x2="31" y2="60" stroke="#e5e7eb" stroke-width="1"/>
+                    
+                    <!-- An's data -->
+                    <polygon points="100,35 150,70 150,130 100,165 50,130 55,70" 
+                             fill="#f87171" opacity="0.3" stroke="#f87171" stroke-width="2"/>
+                    
+                    <!-- Minh's data -->
+                    <polygon points="100,30 160,65 155,135 100,170 45,135 40,65" 
+                             fill="#8b5cf6" opacity="0.3" stroke="#8b5cf6" stroke-width="2"/>
+                </svg>
+                
+                <!-- Labels -->
+                <div class="absolute top-0 left-1/2 transform -translate-x-1/2 text-xs font-medium text-gray-700">Hướng ngoại</div>
+                <div class="absolute top-1/4 right-0 text-xs font-medium text-gray-700">Tự phát</div>
+                <div class="absolute bottom-1/4 right-0 text-xs font-medium text-gray-700">Cảm tính</div>
+                <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 text-xs font-medium text-gray-700">Thực tế</div>
+                <div class="absolute bottom-1/4 left-0 text-xs font-medium text-gray-700">Lý tính</div>
+                <div class="absolute top-1/4 left-0 text-xs font-medium text-gray-700">Kế hoạch</div>
+            </div>
+
+            <div class="flex justify-center space-x-6 text-sm">
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-rose-400 rounded-full"></div>
+                    <span class="text-gray-600">An</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+                    <span class="text-gray-600">Minh</span>
+                </div>
+            </div>
+
+            <div class="mt-6 p-4 bg-gradient-to-r from-rose-50 to-purple-50 rounded-xl border border-rose-200">
+                <h4 class="font-medium text-gray-800 mb-2">Phân tích</h4>
+                <p class="text-sm text-gray-600">Cả hai có sự cân bằng tốt giữa cảm tính và lý tính. An thiên về kế hoạch trong khi Minh linh hoạt hơn - điều này tạo sự bổ sung hoàn hảo!</p>
+            </div>
+        </div>
+
+        <!-- Prediction & Forecast -->
+        <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white">
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                    <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12,6 12,12 16,14"></polyline>
+                    </svg>
+                </div>
+                <h2 class="text-lg font-semibold">Dự đoán & Xu hướng</h2>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="p-4 bg-white/10 backdrop-blur-sm rounded-xl">
+                    <div class="flex items-start justify-between mb-2">
+                        <div>
+                            <h4 class="font-medium mb-1">Nếu duy trì nhịp độ này...</h4>
+                            <p class="text-sm text-indigo-100">Trong 3 tháng tới bạn sẽ:</p>
+                        </div>
+                        <span class="text-2xl">🔮</span>
+                    </div>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-center space-x-2">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20,6 9,17 4,12"></polyline>
+                            </svg>
+                            <span>Đạt 150 buổi hẹn cùng nhau</span>
+                        </li>
+                        <li class="flex items-center space-x-2">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20,6 9,17 4,12"></polyline>
+                            </svg>
+                            <span>Tăng 15% thời gian chất lượng bên nhau</span>
+                        </li>
+                        <li class="flex items-center space-x-2">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20,6 9,17 4,12"></polyline>
+                            </svg>
+                            <span>Hoàn thành 5 mục tiêu chung mới</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="p-4 bg-white/10 backdrop-blur-sm rounded-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="font-medium">Chỉ số hạnh phúc dự kiến</h4>
+                        <div class="flex items-center space-x-2">
+                            <div class="text-2xl font-bold">9.1</div>
+                            <div class="flex items-center text-emerald-300 text-sm">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="18,15 12,9 6,15"></polyline>
+                                </svg>
+                                <span>+4.6%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-full bg-white/20 rounded-full h-2">
+                        <div class="h-full bg-gradient-to-r from-emerald-400 to-green-400 rounded-full" style="width: 91%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendation Engine -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Đề xuất cá nhân hóa</h2>
+            <p class="text-sm text-gray-600 mb-6">Dựa trên phân tích dữ liệu của bạn</p>
+            
+            <div class="space-y-3">
+                <div class="flex items-start space-x-3 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border-l-4 border-amber-400">
+                    <span class="text-2xl">⏰</span>
+                    <div class="flex-1">
+                        <h4 class="font-medium text-gray-800 mb-1">Tăng thời gian chất lượng</h4>
+                        <p class="text-sm text-gray-600 mb-2">Bạn đang thiếu 14h quality time so với mục tiêu. Thử lên kế hoạch cho 2 buổi hẹn dài hơn tuần này nhé!</p>
+                        <button class="text-xs text-amber-700 font-medium hover:underline">Xem gợi ý buổi hẹn →</button>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border-l-4 border-blue-400">
+                    <span class="text-2xl">💬</span>
+                    <div class="flex-1">
+                        <h4 class="font-medium text-gray-800 mb-1">Cải thiện giao tiếp</h4>
+                        <p class="text-sm text-gray-600 mb-2">Minh thích gọi điện nhiều hơn nhưng bạn hay nhắn tin. Thử thay đổi phương thức để phù hợp hơn!</p>
+                        <button class="text-xs text-blue-700 font-medium hover:underline">Tìm hiểu thêm →</button>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-l-4 border-purple-400">
+                    <span class="text-2xl">🎯</span>
+                    <div class="flex-1">
+                        <h4 class="font-medium text-gray-800 mb-1">Thử thách mới</h4>
+                        <p class="text-sm text-gray-600 mb-2">Cả hai thích đọc sách và nấu ăn. Thử thách "Nấu 10 món từ sách dạy nấu ăn" có vẻ phù hợp!</p>
+                        <button class="text-xs text-purple-700 font-medium hover:underline">Tạo thử thách →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly Recap -->
+        <div class="bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl p-6 text-white">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold">Tuần này qua ảnh</h2>
+                <span class="text-sm text-rose-100">01/09 - 08/09</span>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-2 mb-4">
+                <div class="aspect-square bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center text-3xl">📸</div>
+                <div class="aspect-square bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center text-3xl">🍽️</div>
+                <div class="aspect-square bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center text-3xl">🌅</div>
+            </div>
+
+            <div class="space-y-2 text-sm">
+                <div class="flex items-center space-x-2">
+                    <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
+                    <span>3 buổi hẹn tuyệt vời</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
+                    <span>24 ảnh kỷ niệm mới</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
+                    <span>18.5h thời gian bên nhau</span>
+                </div>
+            </div>
+
+            <button class="w-full mt-4 py-3 bg-white/20 backdrop-blur-sm rounded-xl font-medium hover:bg-white/30 transition-colors">
+                📊 Xem tổng kết tuần
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+
+        function changeTimePeriod(period) {
+            console.log('Changing to period:', period);
+            // Implement period change logic
+        }
+
+        function toggleChartView() {
+            alert('Toggle between different chart views');
+        }
+
+        // Initialize animations on load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate progress bars
+            const bars = document.querySelectorAll('.chart-bar');
+            bars.forEach((bar, index) => {
+                setTimeout(() => {
+                    bar.style.transform = 'scaleY(1)';
+                }, index * 100);
+            });
+
+            // Animate heatmap cells on hover
+            const heatmapCells = document.querySelectorAll('.heatmap-cell');
+            heatmapCells.forEach(cell => {
+                cell.addEventListener('mouseenter', function() {
+                    const tooltip = this.getAttribute('title');
+                    console.log(`Time spent: ${tooltip}`);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

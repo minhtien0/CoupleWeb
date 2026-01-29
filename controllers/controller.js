@@ -1,5 +1,7 @@
 const db = require('../config/db');
 const bcrypt = require('bcrypt');
+const fs = require('fs');
+const path = require('path');
 
 exports.getHome = (req, res) => {
     res.render('index'); // Render view
@@ -43,7 +45,7 @@ exports.postLogin = async(req, res) => {
         const [couple] = await db.query(
             'SELECT * FROM couples WHERE (user1_code = ? OR user2_code = ?) AND status = 1 LIMIT 1', [userId, userId]
         );
-        // Lưu thông tin user vào session
+
         req.session.user = {
             id: user[0].id,
             name: user[0].name,
@@ -64,8 +66,6 @@ exports.postLogin = async(req, res) => {
             console.log("⚠️ User chưa có couple.");
         }
 
-        // Đăng nhập thành công - Có thể lưu session hoặc trả token (ở đây trả JSON đơn giản)
-        // 7. Quyết định redirect
         if (couple.length === 0) {
             return res.status(200).json({
                 success: true,
@@ -169,10 +169,427 @@ exports.Logout = (req, res) => {
         if (err) {
             return res.status(500).json({ success: false, message: "Lỗi khi đăng xuất!" });
         }
-        res.redirect('/'); // Quay lại trang chính sau khi logout
+        res.json({ success: true });
     });
 };
 
+//Trang cá nhân
+exports.Profile = async(req, res) => {
+    try {
+        if (!req.session || !req.session.user) {
+            return res.redirect('/');
+        }
+        const userId = req.session.user.id;
+        const [user] = await db.query(
+            `SELECT  u.name, u.email, u.age, u.gender, u.code,u.avatar,u.height,u.mbti,u.zodiac,u.address,u.about, c.*
+            FROM users u  
+            JOIN couples c ON (u.code = c.user1_code OR u.code = c.user2_code) 
+            WHERE u.id = ?`, [userId]
+        );
+
+        const [listEdu] = await db.query(
+            'SELECT * FROM educations WHERE user_id = ? ', [userId]
+        );
+
+        const [listSkill] = await db.query(
+            'SELECT * FROM skill WHERE user_id = ? ', [userId]
+        );
+
+        const [listHobby] = await db.query(
+            'SELECT * FROM hobby WHERE user_id = ? ', [userId]
+        );
+
+        const [listInterest] = await db.query(
+            'SELECT * FROM interest WHERE user_id = ? ', [userId]
+        );
+
+        res.render('us/profile', {
+            infoUser: user[0],
+            listEdu,
+            listSkill,
+            listHobby,
+            listInterest
+        });
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+exports.updateProfile = async(req, res) => {
+    try {
+        const userId = req.session.user.id;
+        const { name, age, gender } = req.body;
+
+        if (!name || !age || gender === undefined) {
+            return res.json({
+                success: false,
+                message: 'Thiếu dữ liệu'
+            });
+        }
+        const birthDate = new Date(age);
+        if (isNaN(birthDate)) {
+            return res.json({
+                success: false,
+                message: 'Ngày sinh không hợp lệ'
+            });
+        }
+
+        await db.query(
+            'UPDATE users SET name = ?, age = ?, gender = ? WHERE id = ?', [name, age, gender, userId]
+        );
+        req.session.user.name = name;
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server'
+        });
+    }
+};
+exports.updateBasicInfo = async(req, res) => {
+    try {
+        const userId = req.session.user.id;
+        const { age, height, zodiac, mbti, address } = req.body;
+
+        await db.query(
+            `UPDATE users 
+             SET age = ?, height = ?, zodiac = ?, mbti = ?, address = ?
+             WHERE id = ?`, [
+                age || null,
+                height || null,
+                zodiac || null,
+                mbti || null,
+                address || null,
+                userId
+            ]
+        );
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server'
+        });
+    }
+};
+
+exports.updateAbout = async(req, res) => {
+    try {
+        const userId = req.session.user.id;
+        const { content } = req.body;
+        if (!content) {
+            return res.json({
+                success: false,
+                message: 'Vui lòng nhập nội dung'
+            });
+        }
+        await db.query(
+            'UPDATE users SET about = ? WHERE id = ?', [content, userId]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server'
+        });
+    }
+};
+//Đổi mật khẩu
+exports.changePassword = async(req, res) => {
+    try {
+        const userId = req.session.user.id;
+        const { oldPassword, newPassword } = req.body;
+
+        if (!oldPassword || !newPassword) {
+            return res.json({
+                success: false,
+                message: 'Vui lòng nhập đầy đủ thông tin'
+            });
+        }
+
+        if (newPassword.length < 6) {
+            return res.json({
+                success: false,
+                message: 'Mật khẩu mới phải ít nhất 6 ký tự'
+            });
+        }
+
+        const [rows] = await db.query(
+            'SELECT password FROM users WHERE id = ? LIMIT 1', [userId]
+        );
+
+        if (!rows.length) {
+            return res.json({
+                success: false,
+                message: 'Người dùng không tồn tại'
+            });
+        }
+
+        const hashedPassword = rows[0].password;
+
+        const isMatch = await bcrypt.compare(oldPassword, hashedPassword);
+        if (!isMatch) {
+            return res.json({
+                success: false,
+                message: 'Mật khẩu hiện tại không đúng'
+            });
+        }
+
+        const isSame = await bcrypt.compare(newPassword, hashedPassword);
+        if (isSame) {
+            return res.json({
+                success: false,
+                message: 'Mật khẩu mới không được trùng mật khẩu cũ'
+            });
+        }
+
+        const newHashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await db.query(
+            'UPDATE users SET password = ? WHERE id = ?', [newHashedPassword, userId]
+        );
+
+        res.json({ success: true, message: 'Đổi mật khẩu thành công' });
+
+    } catch (err) {
+        console.error('changePassword error:', err);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server'
+        });
+    }
+};
+
+//Đổi đại diện 
+exports.updateAvatar = async(req, res) => {
+    try {
+        const userId = req.session.user.id;
+        if (!req.file) {
+            return res.status(400).send('Vui lòng chọn ảnh');
+        }
+        const newAvatarPath = `/uploads/avatars/${req.file.filename}`;
+        const [rows] = await db.query(
+            'SELECT avatar FROM users WHERE id = ?', [userId]
+        );
+        if (!rows.length) {
+            return res.status(404).send('User không tồn tại');
+        }
+        const oldAvatar = rows[0].avatar;
+        await db.query(
+            'UPDATE users SET avatar = ? WHERE id = ?', [newAvatarPath, userId]
+        );
+        if (oldAvatar) {
+            const oldPath = path.join(__dirname, '../public', oldAvatar);
+            if (fs.existsSync(oldPath)) {
+                fs.unlinkSync(oldPath);
+            }
+        }
+        req.session.user.avatar = newAvatarPath;
+        res.redirect('/profile');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Lỗi upload avatar');
+    }
+};
+
+//Chỉnh sửa học vấn
+exports.getEduPartial = async(req, res) => {
+    const userId = req.session.user.id;
+
+    const [listEdu] = await db.query(
+        'SELECT school, major, year FROM educations WHERE user_id = ?', [userId]
+    );
+
+    res.render('partials/education', { listEdu });
+};
+exports.addEducation = async(req, res) => {
+    try {
+        const userId = req.session.user.id;
+        const { school, major, year } = req.body;
+
+        if (!school && !major && !year) {
+            return res.json({
+                success: false,
+                message: 'Vui lòng nhập ít nhất 1 thông tin!'
+            });
+        }
+
+        await db.query(
+            `INSERT INTO educations (user_id, school, major, year)
+             VALUES (?, ?, ?, ?)`, [
+                userId,
+                school || null,
+                major || null,
+                year || null
+            ]
+        );
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server'
+        });
+    }
+};
+//Chỉnh sửa tài năng
+exports.getSkillPartial = async(req, res) => {
+    const userId = req.session.user.id;
+
+    const [listSkill] = await db.query(`SELECT name, icon, user_id FROM skill WHERE user_id = ?`, [userId]);
+
+    res.render('partials/skill', { listSkill });
+};
+
+exports.addSkill = async(req, res) => {
+    try {
+        const userId = req.session.user.id;
+        const { name, icon } = req.body;
+
+        if (!name && !icon) {
+            return res.json({
+                success: false,
+                message: 'Vui lòng nhập ít nhất 1 thông tin!'
+            });
+        }
+
+        if (!name) {
+            return res.json({
+                success: false,
+                message: 'Vui lòng nhập tên kĩ năng!'
+            });
+        }
+        if (!icon) {
+            return res.json({
+                success: false,
+                message: 'Vui lòng chọn 1 icon phù hợp!'
+            });
+        }
+        await db.query(
+            `INSERT INTO skill (user_id, name, icon)
+                     VALUES (?, ?, ?)`, [
+                userId,
+                name || null,
+                icon || null,
+            ]
+        );
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server'
+        });
+    }
+};
+//Chỉnh sửa mục tiêu ước mơ
+exports.getHobbyPartial = async(req, res) => {
+    const userId = req.session.user.id;
+
+    const [listHobby] = await db.query(`SELECT title, content,icon, user_id FROM hobby WHERE user_id = ?`, [userId]);
+
+    res.render('partials/hobby', { listHobby });
+};
+
+exports.addHobby = async(req, res) => {
+    try {
+        const userId = req.session.user.id;
+        const { title, content, icon } = req.body;
+
+        if (!title && !content && !icon) {
+            return res.json({
+                success: false,
+                message: 'Vui lòng nhập ít nhất 1 thông tin!'
+            });
+        }
+
+        if (!title) {
+            return res.json({
+                success: false,
+                message: 'Vui lòng nhập tên mục tiêu || ước mơ!'
+            });
+        }
+        if (!icon) {
+            return res.json({
+                success: false,
+                message: 'Vui lòng chọn 1 icon phù hợp!'
+            });
+        }
+        await db.query(
+            `INSERT INTO hobby (user_id, title,content, icon)
+                     VALUES (?, ?, ?,?)`, [
+                userId,
+                title || null,
+                content || null,
+                icon || null
+            ]
+        );
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server'
+        });
+    }
+};
+//Chỉnh sửa sở thích
+exports.getInterestPartial = async(req, res) => {
+    try {
+        const userId = req.session.user.id;
+
+        const [listInterest] = await db.query(`SELECT name, icon FROM interest WHERE user_id = ?`, [userId]);
+
+        res.render('partials/interest', { listInterest });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server'
+        });
+
+    }
+};
+exports.addInterest = async(req, res) => {
+    try {
+        const userId = req.session.user.id;
+        const { name, icon } = req.body;
+
+        if (!name && !icon) {
+            return res.json({
+                success: false,
+                message: 'Vui lòng nhập ít nhất 1 thông tin!'
+            });
+        }
+
+        if (!name) {
+            return res.json({
+                success: false,
+                message: 'Vui lòng nhập tên sở thích!'
+            });
+        }
+        if (!icon) {
+            return res.json({
+                success: false,
+                message: 'Vui lòng chọn icon thích hợp!'
+            });
+        }
+        await db.query(`INSERT INTO interest (user_id, name, icon) VALUES (?, ?, ?)`, [userId, name, icon]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi server'
+        });
+    }
+};
 //Moi ghep noi
 exports.inviteConnect = async(req, res) => {
     try {
@@ -248,41 +665,25 @@ exports.getMatching = async(req, res) => {
         // Query cho tab "Received" (lời mời nhận được)
         const [tobeinvitedResult] = await db.query(
             `
-            SELECT u.*, c.started_at, c.id AS couples_id
-            FROM users u
-            JOIN couples c ON u.code = c.user1_code
-            WHERE c.status = 0 AND c.user2_code = ?
-            `, [user.code]
+                    SELECT u.*, c.started_at, c.id AS couples_id FROM users u JOIN couples c ON u.code = c.user1_code WHERE c.status = 0 AND c.user2_code = ? `, [user.code]
         );
 
         // Query cho tab "Sent" (lời mời đã gửi)
         const [invitedResult] = await db.query(
             `
-            SELECT u.*, c.started_at, c.id AS couples_id,c.status   
-            FROM users u
-            JOIN couples c ON u.code = c.user2_code
-            WHERE c.status = 0 OR c.status = 2 AND c.user1_code = ?
-            `, [user.code]
+                    SELECT u.*, c.started_at, c.id AS couples_id, c.status FROM users u JOIN couples c ON u.code = c.user2_code WHERE c.status = 0 OR c.status = 2 AND c.user1_code = ?
+                    `, [user.code]
         );
         //Random User Matching
         const [randomUsersResult] = await db.query(`
-            SELECT u.*
-            FROM users u
-            LEFT JOIN couples c 
-                ON (u.code = c.user1_code OR u.code = c.user2_code)
-            WHERE u.id != ? 
-            AND (c.status IS NULL OR c.status != 1)
-            ORDER BY RAND()
-            LIMIT 10
-        `, [user.id]);
+                    SELECT u.*
+                    FROM users u LEFT JOIN couples c ON(u.code = c.user1_code OR u.code = c.user2_code) WHERE u.id != ?
+                    AND(c.status IS NULL OR c.status != 1) ORDER BY RAND() LIMIT 10 `, [user.id]);
 
         const [listFavoriteResult] = await db.query(`
-            SELECT u.*
-            FROM users u
-            LEFT JOIN list_favorites f 
-                ON (u.id = f.user_favorite)
-            WHERE f.user = ?
-        `, [user.id]);
+                    SELECT u.*
+                    FROM users u LEFT JOIN list_favorites f ON(u.id = f.user_favorite) WHERE f.user = ?
+                    `, [user.id]);
         // Correct: tobeinvitedResult is already the rows array
         const tobeinvited = tobeinvitedResult || [];
         const invited = invitedResult || [];

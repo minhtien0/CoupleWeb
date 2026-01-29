@@ -1,0 +1,16 @@
+<% if (listEdu && listEdu.length > 0) { %>
+    <% listEdu.forEach(edu => { %>
+        <div class="flex items-start space-x-3">
+            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mt-1">
+                <span class="text-lg">🎓</span>
+            </div>
+            <div class="flex-1">
+                <input type="text" value="<%= edu.school %>" class="w-full font-medium text-gray-800 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
+                <input type="text" value="<%= edu.major %>" class="w-full text-sm text-gray-600 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none mt-1">
+                <input type="text" value="<%= edu.year %>" class="w-full text-xs text-gray-500 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none mt-1">
+            </div>
+        </div>
+        <% }) %>
+            <% } else { %>
+                <span class="text-gray-400">Trống</span>
+                <% } %>

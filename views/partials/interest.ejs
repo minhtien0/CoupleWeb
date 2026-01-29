@@ -1,0 +1,12 @@
+<% if (listInterest && listInterest.length > 0) { %>
+    <% listInterest.forEach(inter => { %>
+        <div class="text-center">
+            <div class="interest-icon w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
+                <span class="text-xl"><%=inter.icon%></span>
+            </div>
+            <span class="text-xs text-gray-600"><%=inter.name%></span>
+        </div>
+        <% }) %>
+            <% } else { %>
+                <span class="text-gray-400">Trống</span>
+                <% } %>

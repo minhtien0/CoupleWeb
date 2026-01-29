@@ -12,6 +12,7 @@ const auth = require('../middleware/auth');
 const couple = require('../middleware/couple');
 const uploadGoals = require("../middleware/upload")("goals");
 const uploadMemories = require("../middleware/upload")("memories");
+const uploadAvatar = require('../middleware/uploadAvatar');
 // ===================== AUTH & LOGIN =====================
 router.get('/', exampleController.Login);
 router.post('/login', exampleController.postLogin);
@@ -26,6 +27,20 @@ router.post('/match/send-invite', exampleController.sendInvite);
 router.post('/couple/reject/:couples_id', exampleController.rejectInvite);
 router.post('/couple/cancel/:id', exampleController.cancelInvite);
 router.post('/favorite/add', exampleController.addFavorite);
+router.get('/profile', exampleController.Profile);
+router.post('/update-avatar', uploadAvatar.single('avatar'), exampleController.updateAvatar);
+router.post('/profile/update', exampleController.updateProfile);
+router.post('/profile/basic/update', exampleController.updateBasicInfo);
+router.post('/profile/education/add', exampleController.addEducation);
+router.get('/profile/education/partial', exampleController.getEduPartial);
+router.post('/profile/skill/add', exampleController.addSkill);
+router.get('/profile/skill/partial', exampleController.getSkillPartial);
+router.post('/profile/hobby/add', exampleController.addHobby);
+router.get('/profile/hobby/partial', exampleController.getHobbyPartial);
+router.post('/profile/interest/add', exampleController.addInterest);
+router.get('/profile/interest/partial', exampleController.getInterestPartial);
+router.post('/profile/about/update', exampleController.updateAbout);
+router.post('/profile/password/update', exampleController.changePassword);
 
 // ===================== CÁC ROUTE CẦN COUPLE =====================
 // Chạy middleware couple cho các trang này
@@ -62,7 +77,6 @@ router.get('/us', usController.Index);
 router.post('/us/cost/create', usController.createCost);
 router.get('/us/expenses/export-excel', usController.exportExpensesExcel);
 router.get('/us/statistics', usController.Statistics);
-router.get('/profile', usController.Profile);
 // ===================== KHÁC =====================
 
 module.exports = router;

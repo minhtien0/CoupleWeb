@@ -101,7 +101,7 @@
         <div class="max-w-md mx-auto px-4 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <button onclick="goBack()" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <button onclick="window.location.href='/matching'" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                         <svg class="w-5 h-5 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="15,18 9,12 15,6"></polyline>
                         </svg>
@@ -111,52 +111,66 @@
                         <p class="text-sm text-gray-600">Chỉnh sửa thông tin</p>
                     </div>
                 </div>
-                <div class="flex items-center space-x-2">
-                    <button onclick="saveProfile()" class="px-4 py-2 bg-gradient-to-r from-emerald-400 to-cyan-400 text-white rounded-lg font-medium hover:shadow-lg transition-all">
-                        💾 Lưu
-                    </button>
-                </div>
             </div>
         </div>
     </div>
 
     <!-- Main Content -->
     <div class="max-w-md mx-auto px-4 py-6 space-y-6 pb-24">
-
-        <!-- Avatar & Basic Info -->
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
             <div class="text-center mb-6">
-                <div class="avatar-container w-32 h-32 mx-auto mb-4 rounded-full">
-                    <div class="w-32 h-32 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full flex items-center justify-center">
-                        <span class="text-5xl">👩</span>
+                <div class="flex items-center space-x-2">
+                    <button onclick="saveProfile()" class="px-4 py-2 bg-gradient-to-r from-emerald-400 to-cyan-400 text-white rounded-lg font-medium hover:shadow-lg transition-all">
+                        💾 Lưu
+                    </button>
+                </div>
+                <div class="avatar-container w-32 h-32 mx-auto mb-4 rounded-full relative">
+                    <div class="w-32 h-32 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full flex items-center justify-center overflow-hidden">
+                        <% if (infoUser.avatar) { %>
+                            <img src="<%= infoUser.avatar %>" alt="Avatar" class="w-full h-full object-cover rounded-full">
+                            <% } else { %>
+                                <% if (infoUser.gender === 1) { %>
+                                    <span class="text-5xl">👨</span>
+                                    <% } else { %>
+                                        <span class="text-5xl">👩</span>
+                                        <% } %>
+                                            <% } %>
+
                     </div>
-                    <div class="avatar-overlay rounded-full">
+
+                    <div class="avatar-overlay rounded-full absolute inset-0 flex items-center justify-center">
                         <button onclick="changeAvatar()" class="text-white text-sm font-medium">
                             📷 Đổi ảnh
-                        </button>
+                        </button><input type="file" id="avatarInput" accept="image/*" hidden>
                     </div>
                 </div>
+
                 <div class="space-y-3">
                     <div>
-                        <input type="text" id="display-name" value="An" class="w-full text-center text-2xl font-bold text-gray-800 bg-transparent border-b-2 border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none transition-colors">
+                        <input type="text" id="display-name" value="<%=infoUser.name%>" class="w-full text-center text-2xl font-bold text-gray-800 bg-transparent border-b-2 border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none transition-colors">
                     </div>
                     <div class="flex justify-center">
                         <div class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-medium">
-                            ✨ Đang yêu
+                            ✨
+                            <%= infoUser.status === 1 ? 'Đang yêu' : 'Độc thân' %>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Quick Stats -->
             <div class="grid grid-cols-2 gap-4">
-                <div class="text-center p-3 bg-emerald-50 rounded-xl">
-                    <div class="text-lg font-bold text-emerald-600">23</div>
-                    <div class="text-xs text-gray-600">tuổi</div>
+                <div class="flex flex-col items-center justify-center p-4 bg-emerald-50 rounded-2xl">
+                    <div class="flex items-center justify-center gap-2 text-emerald-600 font-semibold">
+                        <span class="text-xl">🎂</span>
+                        <input type="date" id="birth-date" value="<%= infoUser.age ? infoUser.age.toISOString().split('T')[0] : '' %>" class="bg-transparent text-center outline-none font-bold text-lg w-full max-w-[140px]">
+                    </div>
+                    <div class="mt-1 text-xs text-gray-500 tracking-wide">Ngày sinh</div>
                 </div>
-                <div class="text-center p-3 bg-cyan-50 rounded-xl">
-                    <div class="text-lg font-bold text-cyan-600">108</div>
-                    <div class="text-xs text-gray-600">ngày yêu</div>
+                <div class="flex flex-col items-center justify-center p-4 bg-cyan-50 rounded-2xl">
+                    <select id="gender" class="bg-transparent text-center outline-none font-bold text-lg text-cyan-600 w-full max-w-[140px] appearance-none">
+                        <option value="Nam" <%= infoUser.gender === 'Nam' ? 'selected' : '' %>>👨 Nam</option>
+                        <option value="Nữ" <%= infoUser.gender === 'Nữ' ? 'selected' : '' %>>👩 Nữ</option>
+                    </select>
+                    <div class="mt-1 text-xs text-gray-500 tracking-wide">Giới tính</div>
                 </div>
             </div>
         </div>
@@ -165,95 +179,102 @@
         <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-semibold text-gray-800">Thông tin cơ bản</h2>
-                <button onclick="toggleEdit('basic')" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
-                    ✏️ Sửa
-                </button>
+                <button onclick="toggleEditBasic()" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
+            ✏️ Sửa
+        </button>
             </div>
+
             <div class="space-y-4" id="basic-info">
+
+                <!-- Sinh nhật -->
                 <div class="flex items-center justify-between">
                     <span class="text-gray-600">Sinh nhật</span>
-                    <input type="date" value="2001-03-15" class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
+                    <input type="date" id="birth-date" value="<%= infoUser.age ? infoUser.age.toISOString().split('T')[0] : '' %>" disabled class="basic-input text-right">
                 </div>
+
+                <!-- Chiều cao -->
                 <div class="flex items-center justify-between">
                     <span class="text-gray-600">Chiều cao</span>
-                    <input type="text" value="165 cm" class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none w-20 text-right">
+                    <input type="number" id="height" value="<%= infoUser.height || '' %>" placeholder="Trống" disabled class="basic-input text-right"><span class="text-gray-500">cm</span>
                 </div>
+
+                <!-- Zodiac -->
                 <div class="flex items-center justify-between">
                     <span class="text-gray-600">Cung hoàng đạo</span>
-                    <select class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
-                        <option>♓ Song Ngư</option>
-                        <option>♈ Bạch Dương</option>
-                        <option>♉ Kim Ngưu</option>
-                        <option>♊ Song Tử</option>
-                        <option>♋ Cự Giải</option>
-                        <option>♌ Sư Tử</option>
-                        <option>♍ Xử Nữ</option>
-                        <option>♎ Thiên Bình</option>
-                        <option>♏ Bọ Cạp</option>
-                        <option>♐ Nhân Mã</option>
-                        <option>♑ Ma Kết</option>
-                        <option>♒ Bảo Bình</option>
-                    </select>
+                    <select id="zodiac" disabled class="basic-input text-right">
+                <option value="">Trống</option>
+                <% const zodiacs = [
+                    '♓ Song Ngư','♈ Bạch Dương','♉ Kim Ngưu','♊ Song Tử','♋ Cự Giải','♌ Sư Tử',
+                    '♍ Xử Nữ','♎ Thiên Bình','♏ Bọ Cạp','♐ Nhân Mã','♑ Ma Kết','♒ Bảo Bình'
+                ]; %>
+                <% zodiacs.forEach(z => { %>
+                    <option value="<%= z %>" <%= infoUser.zodiac === z ? 'selected' : '' %>>
+                        <%= z %>
+                    </option>
+                <% }) %>
+            </select>
                 </div>
+
+                <!-- MBTI -->
                 <div class="flex items-center justify-between">
                     <span class="text-gray-600">MBTI</span>
-                    <select class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
-                        <option>INFP - Nhà trung gian</option>
-                        <option>INFJ - Nhà vận động</option>
-                        <option>INTJ - Kiến trúc sư</option>
-                        <option>INTP - Nhà tư tưởng</option>
-                        <option>ENFP - Nhà vận động</option>
-                        <option>ENFJ - Nhà lãnh đạo</option>
-                        <option>ENTJ - Chỉ huy quan</option>
-                        <option>ENTP - Nhà tranh luận</option>
-                        <option>ISFP - Nhà thám hiểm</option>
-                        <option>ISFJ - Nhà bảo vệ</option>
-                        <option>ISTJ - Nhà hậu cần</option>
-                        <option>ISTP - Nhà kỹ thuật</option>
-                        <option>ESFP - Nghệ sĩ</option>
-                        <option>ESFJ - Người thi hành</option>
-                        <option>ESTJ - Người điều hành</option>
-                        <option>ESTP - Doanh nhân</option>
-                    </select>
+                    <select id="mbti" disabled class="basic-input text-right">
+                <option value="">Trống</option>
+                <% const mbtis = [
+                    'INFJ - Nhà vận động','INTJ - Kiến trúc sư','INTP - Nhà tư tưởng','ENFP - Nhà vận động','ENFJ - Nhà lãnh đạo','ENTJ - Chỉ huy quan','ENTP - Nhà tranh luận','ISFP - Nhà thám hiểm',
+                    'ISFJ - Nhà bảo vệ','ISTJ - Nhà hậu cần','ISTP - Nhà kỹ thuật','ESFP - Nghệ sĩ','ESFJ - Người thi hành','ESTJ - Người điều hành','ESTP - Doanh nhân','INFP - Nhà trung gian'
+                ]; %>
+                <% mbtis.forEach(m => { %>
+                    <option value="<%= m %>" <%= infoUser.mbti === m ? 'selected' : '' %>>
+                        <%= m %>
+                    </option>
+                <% }) %>
+            </select>
                 </div>
+
+                <!-- Địa chỉ -->
                 <div class="flex items-start justify-between">
                     <span class="text-gray-600 mt-2">Địa chỉ</span>
-                    <textarea class="text-gray-800 font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none resize-none w-40 text-right" rows="2">Quận 1, TP.HCM</textarea>
+                    <textarea id="address" rows="2" placeholder="Trống" disabled class="basic-input resize-none w-40 text-right"><%= infoUser.address || '' %></textarea>
+                </div>
+
+                <!-- Save -->
+                <div class="text-right hidden" id="basic-save">
+                    <button onclick="saveBasicInfo()" class="px-4 py-2 bg-emerald-500 text-white rounded-lg">
+                💾 Lưu
+            </button>
                 </div>
             </div>
         </div>
+
 
         <!-- Education & Career -->
         <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-semibold text-gray-800">Học vấn & Sự nghiệp</h2>
-                <button onclick="toggleEdit('career')" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
-                    ✏️ Sửa
+                <button onclick="addEdu()" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
+                     ➕ Thêm
                 </button>
             </div>
-            <div class="space-y-4">
-                <div class="flex items-start space-x-3">
-                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mt-1">
-                        <span class="text-lg">🎓</span>
-                    </div>
-                    <div class="flex-1">
-                        <input type="text" value="Đại học Kinh tế TP.HCM" class="w-full font-medium text-gray-800 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
-                        <input type="text" value="Cử nhân Quản trị Kinh doanh" class="w-full text-sm text-gray-600 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none mt-1">
-                        <input type="text" value="2019 - 2023" class="w-full text-xs text-gray-500 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none mt-1">
-                    </div>
-                </div>
-
-                <div class="flex items-start space-x-3">
-                    <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center mt-1">
-                        <span class="text-lg">💼</span>
-                    </div>
-                    <div class="flex-1">
-                        <input type="text" value="Marketing Executive" class="w-full font-medium text-gray-800 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
-                        <input type="text" value="Công ty TNHH Digital Marketing ABC" class="w-full text-sm text-gray-600 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none mt-1">
-                        <input type="text" value="2023 - Hiện tại" class="w-full text-xs text-gray-500 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none mt-1">
-                    </div>
-                </div>
+            <div class="space-y-4" id="edu-list">
+                <% if (listEdu && listEdu.length > 0) { %>
+                    <% listEdu.forEach(edu => { %>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mt-1">
+                                <span class="text-lg">🎓</span>
+                            </div>
+                            <div class="flex-1">
+                                <input type="text" value="<%= edu.school %>" class="w-full font-medium text-gray-800 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
+                                <input type="text" value="<%= edu.major %>" class="w-full text-sm text-gray-600 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none mt-1">
+                                <input type="text" value="<%= edu.year %>" class="w-full text-xs text-gray-500 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none mt-1">
+                            </div>
+                        </div>
+                        <% }) %>
+                            <% } else { %>
+                                <span class="text-gray-400">Trống</span>
+                                <% } %>
             </div>
+
         </div>
 
         <!-- Skills & Talents -->
@@ -264,25 +285,16 @@
                     ➕ Thêm
                 </button>
             </div>
-            <div class="flex flex-wrap gap-2" id="skills-container">
-                <span class="skill-tag bg-rose-100 text-rose-700 px-3 py-2 rounded-full text-sm font-medium cursor-pointer">
-                    🎨 Thiết kế
+            <div class="flex flex-wrap gap-2" id="skills-list">
+                <% if (listSkill && listSkill.length > 0) { %>
+                    <% listSkill.forEach(skill => { %>
+                        <span class="skill-tag bg-rose-100 text-rose-700 px-3 py-2 rounded-full text-sm font-medium cursor-pointer">
+                    <%= skill.icon %> <%= skill.name %>
                 </span>
-                <span class="skill-tag bg-blue-100 text-blue-700 px-3 py-2 rounded-full text-sm font-medium cursor-pointer">
-                    📱 Social Media
-                </span>
-                <span class="skill-tag bg-purple-100 text-purple-700 px-3 py-2 rounded-full text-sm font-medium cursor-pointer">
-                    🎵 Hát
-                </span>
-                <span class="skill-tag bg-emerald-100 text-emerald-700 px-3 py-2 rounded-full text-sm font-medium cursor-pointer">
-                    👩‍🍳 Nấu ăn
-                </span>
-                <span class="skill-tag bg-amber-100 text-amber-700 px-3 py-2 rounded-full text-sm font-medium cursor-pointer">
-                    📸 Chụp ảnh
-                </span>
-                <span class="skill-tag bg-cyan-100 text-cyan-700 px-3 py-2 rounded-full text-sm font-medium cursor-pointer">
-                    💬 Tiếng Anh
-                </span>
+                        <% }) %>
+                            <% } else { %>
+                                <span class="text-gray-400">Trống</span>
+                                <% } %>
             </div>
         </div>
 
@@ -294,55 +306,19 @@
                     ➕ Thêm
                 </button>
             </div>
-            <div class="grid grid-cols-4 gap-4" id="interests-container">
-                <div class="text-center">
-                    <div class="interest-icon w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
-                        <span class="text-xl">📚</span>
-                    </div>
-                    <span class="text-xs text-gray-600">Đọc sách</span>
-                </div>
-                <div class="text-center">
-                    <div class="interest-icon w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
-                        <span class="text-xl">🎬</span>
-                    </div>
-                    <span class="text-xs text-gray-600">Phim ảnh</span>
-                </div>
-                <div class="text-center">
-                    <div class="interest-icon w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
-                        <span class="text-xl">🧘</span>
-                    </div>
-                    <span class="text-xs text-gray-600">Yoga</span>
-                </div>
-                <div class="text-center">
-                    <div class="interest-icon w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
-                        <span class="text-xl">🎵</span>
-                    </div>
-                    <span class="text-xs text-gray-600">Âm nhạc</span>
-                </div>
-                <div class="text-center">
-                    <div class="interest-icon w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
-                        <span class="text-xl">☕</span>
-                    </div>
-                    <span class="text-xs text-gray-600">Café</span>
-                </div>
-                <div class="text-center">
-                    <div class="interest-icon w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
-                        <span class="text-xl">✈️</span>
-                    </div>
-                    <span class="text-xs text-gray-600">Du lịch</span>
-                </div>
-                <div class="text-center">
-                    <div class="interest-icon w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
-                        <span class="text-xl">💄</span>
-                    </div>
-                    <span class="text-xs text-gray-600">Làm đẹp</span>
-                </div>
-                <div class="text-center">
-                    <div class="interest-icon w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
-                        <span class="text-xl">🛍️</span>
-                    </div>
-                    <span class="text-xs text-gray-600">Mua sắm</span>
-                </div>
+            <div class="grid grid-cols-4 gap-4" id="interest-list">
+                <% if (listInterest && listInterest.length > 0) { %>
+                    <% listInterest.forEach(inter => { %>
+                        <div class="text-center">
+                            <div class="interest-icon w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
+                                <span class="text-xl"><%=inter.icon%></span>
+                            </div>
+                            <span class="text-xs text-gray-600"><%=inter.name%></span>
+                        </div>
+                        <% }) %>
+                            <% } else { %>
+                                <span class="text-gray-400">Trống</span>
+                                <% } %>
             </div>
         </div>
 
@@ -350,65 +326,96 @@
         <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-semibold text-gray-800">Về bản thân</h2>
-                <button onclick="toggleEdit('about')" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
+                <button onclick="updateAbout()" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
                     ✏️ Sửa
                 </button>
             </div>
-            <textarea id="about-me" class="w-full p-4 bg-gray-50 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none resize-none transition-colors" rows="6" placeholder="Viết vài dòng về bản thân...">Mình là một người yêu thích khám phá những điều mới mẻ và luôn tìm kiếm sự cân bằng trong cuộc sống. Công việc marketing giúp mình phát huy tính sáng tạo, còn thời gian rảnh thì mình thích đọc sách, nghe nhạc và thử những món ăn mới.
+            <textarea id="about-me" class="w-full p-4 bg-gray-50 rounded-xl border border-gray-200
+    focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200
+    focus:outline-none resize-none transition-colors" rows="6" placeholder="Viết vài dòng về bản thân..."><%= infoUser.about || '' %></textarea>
 
-Mình tin rằng tình yêu là hành trình cùng nhau trưởng thành và chia sẻ những khoảnh khắc đẹp. Hy vọng chúng ta sẽ cùng tạo ra nhiều kỷ niệm đáng nhớ! 💕</textarea>
         </div>
 
         <!-- Goals & Dreams -->
         <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-semibold text-gray-800">Mục tiêu & Ước mơ</h2>
-                <button onclick="addGoal()" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
+                <button onclick="addHobby()" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
                     ➕ Thêm
                 </button>
             </div>
-            <div class="space-y-4" id="goals-container">
-                <div class="flex items-start space-x-3 p-3 bg-rose-50 rounded-xl">
-                    <div class="w-8 h-8 bg-rose-200 rounded-lg flex items-center justify-center mt-1">
-                        <span class="text-sm">💕</span>
-                    </div>
-                    <div class="flex-1">
-                        <h4 class="font-medium text-gray-800">Tình cảm</h4>
-                        <p class="text-sm text-gray-600">Xây dựng mối quan hệ bền vững, hiểu nhau sâu sắc</p>
-                    </div>
-                </div>
-
-                <div class="flex items-start space-x-3 p-3 bg-emerald-50 rounded-xl">
-                    <div class="w-8 h-8 bg-emerald-200 rounded-lg flex items-center justify-center mt-1">
-                        <span class="text-sm">🏠</span>
-                    </div>
-                    <div class="flex-1">
-                        <h4 class="font-medium text-gray-800">Gia đình</h4>
-                        <p class="text-sm text-gray-600">Có nhà riêng và gia đình nhỏ hạnh phúc trong 5 năm tới</p>
-                    </div>
-                </div>
-
-                <div class="flex items-start space-x-3 p-3 bg-blue-50 rounded-xl">
-                    <div class="w-8 h-8 bg-blue-200 rounded-lg flex items-center justify-center mt-1">
-                        <span class="text-sm">🚀</span>
-                    </div>
-                    <div class="flex-1">
-                        <h4 class="font-medium text-gray-800">Sự nghiệp</h4>
-                        <p class="text-sm text-gray-600">Trở thành Marketing Manager trong 2 năm tới</p>
-                    </div>
-                </div>
-
-                <div class="flex items-start space-x-3 p-3 bg-purple-50 rounded-xl">
-                    <div class="w-8 h-8 bg-purple-200 rounded-lg flex items-center justify-center mt-1">
-                        <span class="text-sm">✈️</span>
-                    </div>
-                    <div class="flex-1">
-                        <h4 class="font-medium text-gray-800">Du lịch</h4>
-                        <p class="text-sm text-gray-600">Khám phá 10 quốc gia cùng người yêu</p>
-                    </div>
-                </div>
+            <div class="space-y-4" id="hobby-list">
+                <% if (listHobby && listHobby.length > 0) { %>
+                    <% listHobby.forEach(hobby => { %>
+                        <div class="flex items-start space-x-3 p-3 bg-rose-50 rounded-xl">
+                            <div class="w-8 h-8 bg-rose-200 rounded-lg flex items-center justify-center mt-1">
+                                <span class="text-sm"><%=hobby.icon%></span>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-medium text-gray-800">
+                                    <%=hobby.title%>
+                                </h4>
+                                <p class="text-sm text-gray-600">
+                                    <%=hobby.content%>
+                                </p>
+                            </div>
+                        </div>
+                        <% }) %>
+                            <% } else { %>
+                                <span class="text-gray-400">Trống</span>
+                                <% } %>
             </div>
         </div>
+
+        <div class="bg-gradient-to-br from-amber-100 to-rose-100 rounded-2xl p-6 shadow-sm border border-rose-200">
+            <div class="text-center mb-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-2">Thay đổi mật khẩu</h2>
+                <p class="text-sm text-gray-600">Bảo mật tài khoản của bạn</p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">Mật khẩu hiện tại</label>
+                    <input type="password" id="old-password" class="w-full px-4 py-3 rounded-xl border border-gray-200
+                focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200
+                focus:outline-none transition" placeholder="Nhập mật khẩu hiện tại">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">Mật khẩu mới</label>
+                    <input type="password" id="new-password" autocomplete="new-password" class="w-full px-4 py-3 rounded-xl border border-gray-200
+                focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200
+                focus:outline-none transition" placeholder="Nhập mật khẩu mới">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">Xác nhận mật khẩu mới</label>
+                    <input type="password" id="confirm-password" autocomplete="confirm-password" class="w-full px-4 py-3 rounded-xl border border-gray-200
+                focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200
+                focus:outline-none transition" placeholder="Nhập lại mật khẩu mới">
+                </div>
+                <button onclick="changePassword()" class="w-full mt-2 bg-gradient-to-r from-emerald-500 to-teal-500
+            text-white font-semibold py-3 rounded-xl shadow
+            hover:from-emerald-600 hover:to-teal-600
+            active:scale-95 transition">
+            🔒 Cập nhật mật khẩu
+        </button>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-rose-100 to-red-100 rounded-2xl p-6 shadow-sm border border-rose-200">
+            <div class="text-center mb-4">
+                <h2 class="text-lg font-semibold text-gray-800 mb-2">Phiên đăng nhập</h2>
+                <p class="text-sm text-gray-600">Thoát khỏi tài khoản hiện tại</p>
+            </div>
+
+            <button onclick="logout()" class="w-full bg-gradient-to-r from-rose-500 to-red-500
+        text-white font-semibold py-3 rounded-xl shadow
+        hover:from-rose-600 hover:to-red-600
+        active:scale-95 transition">
+        🚪 Đăng xuất
+    </button>
+        </div>
+
+
 
         <!-- Compatibility Score -->
         <div class="bg-gradient-to-br from-pink-100 to-purple-100 rounded-2xl p-6 shadow-sm border border-rose-200">
@@ -477,13 +484,21 @@ Mình tin rằng tình yêu là hành trình cùng nhau trưởng thành và chi
                         <input type="text" id="skill-name" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="VD: Lập trình, Guitar...">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Mức độ thành thạo</label>
-                        <select id="skill-level" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
-                            <option>Mới học</option>
-                            <option>Cơ bản</option>
-                            <option>Trung bình</option>
-                            <option>Khá giỏi</option>
-                            <option>Chuyên nghiệp</option>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Icon</label>
+                        <select id="skill-icon" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                            <option>🎨</option>
+                            <option>🎮</option>
+                            <option>🏊‍♀️</option>
+                            <option>🎯</option>
+                            <option>🎸</option>
+                            <option>🍳</option>
+                            <option>🧵</option>
+                            <option>🌱</option>
+                            <option>📱</option>
+                            <option>💬</option>
+                            <option>📸</option>
+                            <option>👩‍🍳</option>
+                            <option>🎵</option>
                         </select>
                     </div>
                 </div>
@@ -501,312 +516,580 @@ Mình tin rằng tình yêu là hành trình cùng nhau trưởng thành và chi
         </div>
     </div>
 
+    <!-- Add Interest Modal -->
+    <div id="interest-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 hidden">
+        <div class="flex items-end sm:items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md transform transition-all">
+                <div class="p-6 border-b border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-800">Thêm Yêu Thích</h3>
+                        <button onclick="closeInterestModal()" class="p-2 text-gray-400 hover:text-gray-600">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tên yêu thích</label>
+                        <input type="text" id="interest-name" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="VD: Lập trình, Guitar...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Icon</label>
+                        <select id="interest-icon" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                            <option>🎨</option>
+                            <option>🎮</option>
+                            <option>🏊‍♀️</option>
+                            <option>🎯</option>
+                            <option>🎸</option>
+                            <option>🍳</option>
+                            <option>🧵</option>
+                            <option>🌱</option>
+                            <option>📱</option>
+                            <option>💬</option>
+                            <option>📸</option>
+                            <option>👩‍🍳</option>
+                            <option>🎵</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="p-6 border-t border-gray-100">
+                    <div class="flex space-x-3">
+                        <button onclick="closeInterestModal()" class="flex-1 py-3 px-4 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                            Hủy
+                        </button>
+                        <button onclick="addNewInterest()" class="flex-1 py-3 px-4 bg-gradient-to-r from-emerald-400 to-cyan-400 text-white rounded-xl font-medium hover:shadow-lg transition-all">
+                            Thêm yêu thích
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Hobby Modal -->
+    <div id="hobby-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 hidden">
+        <div class="flex items-end sm:items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md transform transition-all">
+                <div class="p-6 border-b border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-800">Thêm mục tiêu || ước mơ</h3>
+                        <button onclick="closeHobbyModal()" class="p-2 text-gray-400 hover:text-gray-600">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tên mục tiêu</label>
+                        <input type="text" id="hobby-title" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="VD: Lập trình, Guitar...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Icon</label>
+                        <select id="hobby-icon" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                            <option>🎨</option>
+                            <option>💕</option>
+                            <option>🏊‍♀️</option>
+                            <option>🎯</option>
+                            <option>🎸</option>
+                            <option>🍳</option>
+                            <option>🧵</option>
+                            <option>🌱</option>
+                            <option>📱</option>
+                            <option>💬</option>
+                            <option>📸</option>
+                            <option>👩‍🍳</option>
+                            <option>🏠</option>
+                            <option>🎵</option>
+                            <option>🚀</option>
+                            <option>✈️</option>
+                            <option>🎓</option>
+                            <option>💪</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nội dung chi tiết</label>
+                        <textarea id="hobby-content" rows="4" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none" placeholder="VD: Mục tiêu ra trường làm công an..."></textarea>
+                    </div>
+                </div>
+                <div class="p-6 border-t border-gray-100">
+                    <div class="flex space-x-3">
+                        <button onclick="closeHobbyModal()" class="flex-1 py-3 px-4 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                            Hủy
+                        </button>
+                        <button onclick="addNewHobby()" class="flex-1 py-3 px-4 bg-gradient-to-r from-emerald-400 to-cyan-400 text-white rounded-xl font-medium hover:shadow-lg transition-all">
+                            Thêm mục tiêu
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Edu Modal -->
+    <div id="edu-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 hidden">
+        <div class="flex items-end sm:items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md transform transition-all">
+                <div class="p-6 border-b border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-800">Thêm Học vấn & Sự nghiệp</h3>
+                        <button onclick="closeEduModal()" class="p-2 text-gray-400 hover:text-gray-600">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tên trường - Công Ty</label>
+                        <input type="text" id="edu-name" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="VD: Cao Đẳng Cao Thắng - CKC, Học Viện Hàng Không - VAA...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Chuyên ngành - Chuyên môn</label>
+                        <input type="text" id="edu-major" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="VD: Công Nghệ Thông Tin, Kế Toán...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Khóa - Năm</label>
+                        <input type="text" id="edu-year" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="VD:2022-2025">
+                    </div>
+                </div>
+                <div class="p-6 border-t border-gray-100">
+                    <div class="flex space-x-3">
+                        <button onclick="closeEduModal()" class="flex-1 py-3 px-4 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                            Hủy
+                        </button>
+                        <button onclick="addNewEdu()" class="flex-1 py-3 px-4 bg-gradient-to-r from-emerald-400 to-cyan-400 text-white rounded-xl font-medium hover:shadow-lg transition-all">
+                            Thêm kỹ năng
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // State variables
-        let editMode = {
-            basic: false,
-            career: false,
-            about: false
-        };
-
-        let skills = [
-            'Thiết kế', 'Social Media', 'Hát', 'Nấu ăn', 'Chụp ảnh', 'Tiếng Anh'
-        ];
-
-        let interests = [
-            'Đọc sách', 'Phim ảnh', 'Yoga', 'Âm nhạc', 'Café', 'Du lịch', 'Làm đẹp', 'Mua sắm'
-        ];
-
-        // Navigation functions
         function goBack() {
-            // In a real app, this would navigate back to the previous page
             alert('Quay lại trang trước');
         }
 
-        function saveProfile() {
-            // Collect all form data and save
-            const profileData = {
-                displayName: document.getElementById('display-name').value,
-                aboutMe: document.getElementById('about-me').value,
-                // ... other fields
-            };
-
-            // Show success message
-            const button = event.target;
-            const originalText = button.innerHTML;
-            button.innerHTML = '✅ Đã lưu!';
-            button.disabled = true;
-
-            setTimeout(() => {
-                button.innerHTML = originalText;
-                button.disabled = false;
-                alert('Hồ sơ đã được cập nhật thành công! 🎉');
-            }, 1500);
-        }
-
-        // Avatar functions
-        function changeAvatar() {
-            // In a real app, this would open file picker or camera
-            const avatars = ['👩', '👩‍💼', '👩‍🎓', '👩‍💻', '👩‍🎨', '👩‍🍳', '🙋‍♀️', '💃'];
-            const currentAvatar = document.querySelector('.avatar-container span');
-            const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
-            currentAvatar.textContent = randomAvatar;
-
-            // Show feedback
-            alert(`Avatar đã được thay đổi thành ${randomAvatar}! 📸`);
-        }
-
-        // Edit mode toggles
-        function toggleEdit(section) {
-            editMode[section] = !editMode[section];
-            const button = event.target;
-
-            if (editMode[section]) {
-                button.textContent = '💾 Lưu';
-                button.classList.add('bg-emerald-100');
-            } else {
-                button.textContent = '✏️ Sửa';
-                button.classList.remove('bg-emerald-100');
-                // Save changes here
-                alert(`Đã lưu thay đổi cho phần ${section}!`);
+        async function logout() {
+            try {
+                const res = await fetch("/logout", {
+                    method: "POST",
+                    credentials: "include"
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("Đã đăng xuất");
+                    window.location.href = "/";
+                } else {
+                    alert(data.message || "Logout thất bại");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Có lỗi xảy ra khi logout");
             }
         }
 
-        // Skills management
+
+        async function changePassword() {
+            const oldPassword = document.getElementById('old-password').value.trim();
+            const newPassword = document.getElementById('new-password').value.trim();
+            const confirmPassword = document.getElementById('confirm-password').value.trim();
+
+            if (!oldPassword || !newPassword || !confirmPassword) {
+                return alert('Vui lòng nhập đầy đủ thông tin');
+            }
+
+            if (newPassword !== confirmPassword) {
+                return alert('Mật khẩu xác nhận không khớp');
+            }
+
+            try {
+                const res = await fetch('/profile/password/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        oldPassword,
+                        newPassword
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('Đổi mật khẩu thành công');
+                    document.getElementById('old-password').value = '';
+                    document.getElementById('new-password').value = '';
+                    document.getElementById('confirm-password').value = '';
+                } else {
+                    alert(data.message || 'Đổi mật khẩu thất bại');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Lỗi kết nối server');
+            }
+        }
+
+
+        async function saveProfile() {
+            const name = document.getElementById('display-name').value.trim();
+            const age = document.getElementById('birth-date').value;
+            const gender = document.getElementById('gender').value;
+
+            if (!name) {
+                alert('Tên không được để trống');
+                return;
+            }
+
+            if (!age) {
+                alert('Vui lòng chọn ngày sinh');
+                return;
+            }
+
+            try {
+                const res = await fetch('/profile/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name,
+                        age,
+                        gender
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('✅ Lưu hồ sơ thành công');
+                    location.reload();
+                } else {
+                    alert(data.message || '❌ Lưu thất bại');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Lỗi kết nối server');
+            }
+        }
+
+        function changeAvatar() {
+            document.getElementById('avatarInput').click();
+        }
+
+        document.getElementById('avatarInput').addEventListener('change', async function() {
+            const file = this.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('avatar', file);
+
+            try {
+                const res = await fetch('/update-avatar', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (res.ok) {
+                    location.reload();
+                } else {
+                    alert('Upload avatar thất bại');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Có lỗi xảy ra');
+            }
+        });
+
+        let isEditingBasic = false;
+
+        function toggleEditBasic() {
+            isEditingBasic = !isEditingBasic;
+
+            document.querySelectorAll('#basic-info input, #basic-info select, #basic-info textarea')
+                .forEach(el => el.disabled = !isEditingBasic);
+
+            document.getElementById('basic-save').classList.toggle('hidden', !isEditingBasic);
+        }
+
+        async function saveBasicInfo() {
+            const data = {
+                age: document.getElementById('birth-date').value,
+                height: document.getElementById('height').value,
+                zodiac: document.getElementById('zodiac').value,
+                mbti: document.getElementById('mbti').value,
+                address: document.getElementById('address').value
+            };
+
+            try {
+                const res = await fetch('/profile/basic/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    alert('✅ Cập nhật thành công');
+                    location.reload();
+                } else {
+                    alert(result.message || '❌ Lỗi');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Lỗi kết nối server');
+            }
+        }
+
         function addSkill() {
             document.getElementById('skill-modal').classList.remove('hidden');
         }
 
-        function closeSkillModal() {
-            document.getElementById('skill-modal').classList.add('hidden');
-            document.getElementById('skill-name').value = '';
-            document.getElementById('skill-level').selectedIndex = 0;
+        function addHobby() {
+            document.getElementById('hobby-modal').classList.remove('hidden');
         }
 
-        function addNewSkill() {
-            const skillName = document.getElementById('skill-name').value;
-            const skillLevel = document.getElementById('skill-level').value;
+        function addEdu() {
+            document.getElementById('edu-modal').classList.remove('hidden');
+        }
 
-            if (!skillName.trim()) {
-                alert('Vui lòng nhập tên kỹ năng!');
+        function addInterest() {
+            document.getElementById('interest-modal').classList.remove('hidden');
+        }
+        async function reloadSkillList() {
+            const res = await fetch('/profile/skill/partial');
+            const html = await res.text();
+            document.getElementById('skills-list').innerHTML = html;
+        }
+        async function reloadEduList() {
+            const res = await fetch('/profile/education/partial');
+            const html = await res.text();
+            document.getElementById('edu-list').innerHTML = html;
+        }
+        async function reloadHobbyList() {
+            const res = await fetch('/profile/hobby/partial');
+            const html = await res.text();
+            document.getElementById('hobby-list').innerHTML = html;
+        }
+
+        async function reloadInterestList() {
+            const res = await fetch('/profile/interest/partial');
+            const html = await res.text();
+            document.getElementById('interest-list').innerHTML = html;
+        }
+
+        async function addNewSkill() {
+            const name = document.getElementById('skill-name').value.trim();
+            const icon = document.getElementById('skill-icon').value.trim();
+            if (!name && !name) {
+                alert('Vui lòng nhập ít nhất một trường');
+                return;
+            }
+            try {
+                const res = await fetch('/profile/skill/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name,
+                        icon
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('skill-name').value = '';
+                    document.getElementById('skill-icon').value = '';
+                    alert('Thêm kỹ năng thành công');
+                    closeSkillModal();
+                    reloadSkillList();
+                } else {
+                    alert(data.message || 'Thêm thất bại');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Lỗi kết nối server');
+            }
+        }
+
+        async function addNewHobby() {
+            const title = document.getElementById('hobby-title').value.trim();
+            const content = document.getElementById('hobby-content').value.trim();
+            const icon = document.getElementById('hobby-icon').value.trim();
+
+            if (!title && !content && !icon) {
+                alert('Vui lòng nhập ít nhất một trường');
+                return;
+            }
+            try {
+                const res = await fetch('/profile/hobby/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title,
+                        content,
+                        icon
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('hobby-title').value = '';
+                    document.getElementById('hobby-content').value = '';
+                    document.getElementById('hobby-icon').value = '';
+                    alert('Thêm thành công');
+                    closeHobbyModal();
+                    reloadHobbyList();
+                } else {
+                    alert(data.message || 'Thêm thất bại');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Lỗi kết nối server');
+            }
+        }
+        async function addNewEdu() {
+            const school = document.getElementById('edu-name').value.trim();
+            const major = document.getElementById('edu-major').value.trim();
+            const year = document.getElementById('edu-year').value.trim();
+
+            if (!school && !major && !year) {
+                alert('Vui lòng nhập ít nhất một trường');
                 return;
             }
 
-            // Create new skill tag
-            const skillsContainer = document.getElementById('skills-container');
-            const skillTag = document.createElement('span');
-            skillTag.className = 'skill-tag bg-indigo-100 text-indigo-700 px-3 py-2 rounded-full text-sm font-medium cursor-pointer';
-            skillTag.innerHTML = `🆕 ${skillName}`;
-
-            // Add click to remove functionality
-            skillTag.addEventListener('click', () => {
-                if (confirm('Xóa kỹ năng này?')) {
-                    skillTag.remove();
-                }
-            });
-
-            skillsContainer.appendChild(skillTag);
-            skills.push(skillName);
-
-            // Show success and close modal
-            const button = event.target;
-            const originalText = button.textContent;
-            button.textContent = '✅ Đã thêm!';
-            button.disabled = true;
-
-            setTimeout(() => {
-                closeSkillModal();
-                button.textContent = originalText;
-                button.disabled = false;
-            }, 1000);
-        }
-
-        // Interests management  
-        function addInterest() {
-            const newInterests = [{
-                icon: '🎮',
-                name: 'Game'
-            }, {
-                icon: '🏊‍♀️',
-                name: 'Bơi lội'
-            }, {
-                icon: '🎯',
-                name: 'Bắn cung'
-            }, {
-                icon: '🎸',
-                name: 'Nhạc cụ'
-            }, {
-                icon: '🍳',
-                name: 'Nướng bánh'
-            }, {
-                icon: '🧵',
-                name: 'Thêu'
-            }, {
-                icon: '🌱',
-                name: 'Trồng cây'
-            }, {
-                icon: '📱',
-                name: 'Công nghệ'
-            }];
-
-            const randomInterest = newInterests[Math.floor(Math.random() * newInterests.length)];
-            const interestsContainer = document.getElementById('interests-container');
-
-            const interestDiv = document.createElement('div');
-            interestDiv.className = 'text-center';
-            interestDiv.innerHTML = `
-                <div class="interest-icon w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
-                    <span class="text-xl">${randomInterest.icon}</span>
-                </div>
-                <span class="text-xs text-gray-600">${randomInterest.name}</span>
-            `;
-
-            interestsContainer.appendChild(interestDiv);
-            alert(`Đã thêm sở thích "${randomInterest.name}"! ${randomInterest.icon}`);
-        }
-
-        // Goals management
-        function addGoal() {
-            const goalTypes = [{
-                icon: '🎓',
-                title: 'Học tập',
-                desc: 'Học một kỹ năng mới hoặc lấy chứng chỉ',
-                bg: 'bg-blue-50',
-                iconBg: 'bg-blue-200'
-            }, {
-                icon: '💪',
-                title: 'Sức khỏe',
-                desc: 'Duy trì lối sống khỏe mạnh và tích cực',
-                bg: 'bg-green-50',
-                iconBg: 'bg-green-200'
-            }, {
-                icon: '💰',
-                title: 'Tài chính',
-                desc: 'Tiết kiệm và đầu tư cho tương lai',
-                bg: 'bg-yellow-50',
-                iconBg: 'bg-yellow-200'
-            }, {
-                icon: '🎨',
-                title: 'Sáng tạo',
-                desc: 'Phát triển khả năng nghệ thuật và sáng tạo',
-                bg: 'bg-purple-50',
-                iconBg: 'bg-purple-200'
-            }];
-
-            const randomGoal = goalTypes[Math.floor(Math.random() * goalTypes.length)];
-            const goalsContainer = document.getElementById('goals-container');
-
-            const goalDiv = document.createElement('div');
-            goalDiv.className = `flex items-start space-x-3 p-3 ${randomGoal.bg} rounded-xl`;
-            goalDiv.innerHTML = `
-                <div class="w-8 h-8 ${randomGoal.iconBg} rounded-lg flex items-center justify-center mt-1">
-                    <span class="text-sm">${randomGoal.icon}</span>
-                </div>
-                <div class="flex-1">
-                    <h4 class="font-medium text-gray-800">${randomGoal.title}</h4>
-                    <p class="text-sm text-gray-600">${randomGoal.desc}</p>
-                </div>
-            `;
-
-            goalsContainer.appendChild(goalDiv);
-            alert(`Đã thêm mục tiêu "${randomGoal.title}"! 🎯`);
-        }
-
-        // Interactive elements
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add click handlers for skill tags (remove functionality)
-            const skillTags = document.querySelectorAll('.skill-tag');
-            skillTags.forEach(tag => {
-                tag.addEventListener('click', () => {
-                    if (confirm('Xóa kỹ năng này khỏi hồ sơ?')) {
-                        tag.remove();
-                    }
+            try {
+                const res = await fetch('/profile/education/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        school,
+                        major,
+                        year
+                    })
                 });
-            });
 
-            // Add click handlers for interest icons (highlight functionality)  
-            const interestIcons = document.querySelectorAll('.interest-icon');
-            interestIcons.forEach(icon => {
-                icon.addEventListener('click', () => {
-                    icon.classList.toggle('ring-2');
-                    icon.classList.toggle('ring-emerald-400');
-                    icon.classList.toggle('ring-offset-2');
-                });
-            });
+                const data = await res.json();
 
-            // Auto-save functionality for inputs
-            const inputs = document.querySelectorAll('input, textarea, select');
-            inputs.forEach(input => {
-                input.addEventListener('change', () => {
-                    // Show subtle save indicator
-                    input.classList.add('ring-1', 'ring-emerald-300');
-                    setTimeout(() => {
-                        input.classList.remove('ring-1', 'ring-emerald-300');
-                    }, 1000);
-                });
-            });
-
-            // Initialize compatibility ring animation
-            setTimeout(() => {
-                const ring = document.querySelector('.compatibility-ring');
-                if (ring) {
-                    ring.style.strokeDashoffset = 'calc(251.2 - (251.2 * 87 / 100))';
-                }
-            }, 500);
-        });
-
-        // Profile validation
-        function validateProfile() {
-            const required = ['display-name', 'about-me'];
-            let isValid = true;
-
-            required.forEach(id => {
-                const element = document.getElementById(id);
-                if (!element.value.trim()) {
-                    element.classList.add('border-red-500');
-                    isValid = false;
+                if (data.success) {
+                    document.getElementById('edu-name').value = '';
+                    document.getElementById('edu-major').value = '';
+                    document.getElementById('edu-year').value = '';
+                    alert('Thêm thành công');
+                    closeEduModal();
+                    reloadEduList();
                 } else {
-                    element.classList.remove('border-red-500');
+                    alert(data.message || 'Thêm thất bại');
                 }
-            });
-
-            return isValid;
+            } catch (err) {
+                console.error(err);
+                alert('Lỗi kết nối server');
+            }
         }
 
-        // Profile completion percentage
-        function calculateCompletion() {
-            const fields = [
-                'display-name', 'about-me', 'birthday', 'height', 'zodiac', 'mbti'
-            ];
+        async function updateAbout() {
+            const content = document.getElementById('about-me').value.trim();
+            if (!content) {
+                alert('Vui lòng nhập nội dung');
+                return;
+            }
+            try {
+                const res = await fetch('/profile/about/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        content
+                    })
+                });
 
-            let completed = 0;
-            fields.forEach(id => {
-                const element = document.getElementById(id);
-                if (element && element.value.trim()) {
-                    completed++;
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('about-me').value = '';
+                    alert('Sửa thành công');
+                    location.reload();
+                } else {
+                    alert(data.message || 'Thêm thất bại');
                 }
-            });
-
-            const percentage = Math.round((completed / fields.length) * 100);
-            console.log(`Profile completion: ${percentage}%`);
-            return percentage;
+            } catch (err) {
+                console.error(err);
+                alert('Lỗi kết nối server');
+            }
         }
 
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
-            calculateCompletion();
+        function closeSkillModal() {
+            document.getElementById('skill-modal').classList.add('hidden');
+        }
 
-            // Add smooth scrolling for better UX
-            document.documentElement.style.scrollBehavior = 'smooth';
+        function closeHobbyModal() {
+            document.getElementById('hobby-modal').classList.add('hidden');
+        }
 
-            // Show completion status
-            setTimeout(() => {
-                const completion = calculateCompletion();
-                if (completion < 80) {
-                    console.log(`Hoàn thành thêm ${100 - completion}% để có hồ sơ đầy đủ!`);
+        function closeEduModal() {
+            document.getElementById('edu-modal').classList.add('hidden');
+        }
+
+        function closeInterestModal() {
+            document.getElementById('interest-modal').classList.add('hidden');
+        }
+
+        async function addNewInterest() {
+            const name = document.getElementById('interest-name').value.trim();
+            const icon = document.getElementById('interest-icon').value.trim();
+            if (!name && !name) {
+                alert('Vui lòng nhập ít nhất một trường');
+                return;
+            }
+            try {
+                const res = await fetch('/profile/interest/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name,
+                        icon
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('interest-name').value = '';
+                    document.getElementById('interest-icon').value = '';
+                    alert('Thêm yêu thích thành công');
+                    closeInterestModal();
+                    reloadInterestList();
+                } else {
+                    alert(data.message || 'Thêm thất bại');
                 }
-            }, 1000);
-        });
+            } catch (err) {
+                console.error(err);
+                alert('Lỗi kết nối server');
+            }
+        }
     </script>
 </body>
 

@@ -1,0 +1,9 @@
+<% if (listSkill && listSkill.length > 0) { %>
+    <% listSkill.forEach(skill => { %>
+        <span class="skill-tag bg-rose-100 text-rose-700 px-3 py-2 rounded-full text-sm font-medium cursor-pointer">
+                    <%= skill.icon %> <%= skill.name %>
+                </span>
+        <% }) %>
+            <% } else { %>
+                <span class="text-gray-400">Trống</span>
+                <% } %>

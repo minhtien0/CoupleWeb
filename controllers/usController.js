@@ -302,7 +302,3 @@ exports.exportExpensesExcel = async(req, res) => {
 exports.Statistics = async(req, res) => {
     res.render('us/statistics');
 };
-
-exports.Profile = (req, res) => {
-    res.render('us/profile'); // Render file views/date/index.ejs
-};

@@ -1,0 +1,19 @@
+<% if (listHobby && listHobby.length > 0) { %>
+    <% listHobby.forEach(hobby => { %>
+        <div class="flex items-start space-x-3 p-3 bg-rose-50 rounded-xl">
+            <div class="w-8 h-8 bg-rose-200 rounded-lg flex items-center justify-center mt-1">
+                <span class="text-sm"><%=hobby.icon%></span>
+            </div>
+            <div class="flex-1">
+                <h4 class="font-medium text-gray-800">
+                    <%=hobby.title%>
+                </h4>
+                <p class="text-sm text-gray-600">
+                    <%=hobby.content%>
+                </p>
+            </div>
+        </div>
+        <% }) %>
+            <% } else { %>
+                <span class="text-gray-400">Trống</span>
+                <% } %>

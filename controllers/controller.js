@@ -2,6 +2,10 @@ const db = require('../config/db');
 const bcrypt = require('bcrypt');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
+const transporter = require('../config/email');
+const { getVerificationEmailHTML } = require('../views/emailTemplate');
 
 exports.getHome = (req, res) => {
     res.render('index'); // Render view
@@ -105,16 +109,22 @@ exports.postRegister = async(req, res) => {
 
         // 1. Kiểm tra không bỏ trống
         if (!displayName || !birthday || !gender || !email || !password) {
-            return res.status(400).json({ success: false, message: "Vui lòng nhập đầy đủ thông tin!" });
+            return res.status(400).json({
+                success: false,
+                message: "Vui lòng nhập đầy đủ thông tin!"
+            });
         }
 
         // 2. Kiểm tra email hợp lệ
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            return res.status(400).json({ success: false, message: "Email không hợp lệ!" });
+            return res.status(400).json({
+                success: false,
+                message: "Email không hợp lệ!"
+            });
         }
 
-        // 3. Kiểm tra mật khẩu: >=6 ký tự, có ít nhất 1 ký tự đặc biệt
+        // 3. Kiểm tra mật khẩu
         const passwordRegex = /^(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{6,}$/;
         if (!passwordRegex.test(password)) {
             return res.status(400).json({
@@ -123,45 +133,464 @@ exports.postRegister = async(req, res) => {
             });
         }
 
-        // 4. Kiểm tra ngày sinh < ngày hiện tại
+        // 4. Kiểm tra ngày sinh
         const birthDate = new Date(birthday);
         const today = new Date();
         if (isNaN(birthDate.getTime()) || birthDate >= today) {
-            return res.status(400).json({ success: false, message: "Ngày sinh không hợp lệ!" });
+            return res.status(400).json({
+                success: false,
+                message: "Ngày sinh không hợp lệ!"
+            });
         }
 
-        // 5. Kiểm tra email đã tồn tại chưa
+        // 5. Kiểm tra email đang chờ xác nhận (trong pending_verifications)
+        const [pendingCheck] = await db.query(
+            'SELECT * FROM pending_verifications WHERE email = ? AND expires_at > NOW()',
+            [email]
+        );
+
+        if (pendingCheck.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Email này đang chờ xác nhận. Vui lòng kiểm tra hộp thư hoặc đợi hết thời gian để đăng ký lại!"
+            });
+        }
+
+        // 6. Kiểm tra email đã tồn tại trong users (đã xác thực)
         const [existingUser] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
         if (existingUser.length > 0) {
-            return res.status(400).json({ success: false, message: "Email đã tồn tại!" });
+            return res.status(400).json({
+                success: false,
+                message: "Email đã tồn tại!"
+            });
         }
 
-        // 6. Hash password
+        // 7. Hash password
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
+        // 8. Tạo code unique
         let code;
         let exists = true;
-
         while (exists) {
-            const random = Math.floor(1000 + Math.random() * 9000); // số ngẫu nhiên từ 1000-9999
+            const random = Math.floor(1000 + Math.random() * 9000);
             code = `LOVE${random}`;
-
             const [rows] = await db.query('SELECT id FROM users WHERE code = ?', [code]);
             exists = rows.length > 0;
         }
-        // 7. Thêm user vào DB
+
+        // 9. Tạo slug
+        const baseName = displayName
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/\s+/g, "");
+
+        let slug = `@${baseName}`;
+        let counter = 0;
+        let isDuplicate = true;
+
+        while (isDuplicate) {
+            const checkSlug = counter === 0 ? slug : `@${baseName}${counter}`;
+            const [rows] = await db.query("SELECT id FROM users WHERE slug = ?", [checkSlug]);
+
+            if (rows.length === 0) {
+                slug = checkSlug;
+                isDuplicate = false;
+            } else {
+                counter++;
+            }
+        }
+
+        // 10. Tạo token ngẫu nhiên (giống Laravel Str::random(40))
+        const token = crypto.randomBytes(20).toString('hex'); // 40 ký tự hex
+
+        // 11. Chuẩn bị dữ liệu user
+        const userData = {
+            displayName,
+            birthday,
+            gender,
+            email,
+            hashedPassword,
+            code,
+            slug
+        };
+
+        // 12. Lưu vào pending_verifications (hết hạn sau 60 giây)
+        const expiresAt = new Date(Date.now() + 60000); // 60 seconds
+
+        // Xóa pending cũ của email này (nếu có)
+        await db.query('DELETE FROM pending_verifications WHERE email = ?', [email]);
+
+        // Insert mới
         await db.query(
-            'INSERT INTO users (name, age, gender, email, password,code) VALUES (?, ?, ?, ?, ?, ?)', [displayName, birthday, gender, email, hashedPassword, code]
+            'INSERT INTO pending_verifications (email, token, user_data, expires_at) VALUES (?, ?, ?, ?)',
+            [email, token, JSON.stringify(userData), expiresAt]
         );
 
-        return res.status(201).json({ success: true, message: "Đăng ký thành công!" });
+        console.log('✅ Token đã tạo:', token);
+        console.log('✅ Đã lưu vào pending_verifications cho email:', email);
+
+        // 13. Tạo link xác nhận
+        const verificationLink = `${process.env.APP_URL || 'https://mycouple.site'}/auth/verify-email/${token}`;
+
+        // 14. Gửi email
+        const mailOptions = {
+            from: {
+                name: '💕 Couple Vibe',
+                address: process.env.GMAIL_USER
+            },
+            to: email,
+            subject: '💗 Xác nhận đăng ký tài khoản - Couple Vibe',
+            html: getVerificationEmailHTML(verificationLink, displayName)
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        return res.status(200).json({
+            success: true,
+            message: "Vui lòng kiểm tra email để xác nhận đăng ký. Link xác nhận có hiệu lực trong 60 giây!"
+        });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: "Đã xảy ra lỗi khi đăng ký!" });
+        console.error('Registration error:', error);
+        res.status(500).json({
+            success: false,
+            message: "Đã xảy ra lỗi khi đăng ký!"
+        });
     }
 };
+
+exports.verifyEmail = async(req, res) => {
+    try {
+        const { token } = req.params; 
+
+        if (!token) {
+            return res.status(400).send(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { 
+                            font-family: Arial; 
+                            text-align: center; 
+                            padding: 50px;
+                            background: linear-gradient(135deg, #FFB6C1, #FFC0CB);
+                        }
+                        .error { 
+                            background: white; 
+                            padding: 40px; 
+                            border-radius: 20px;
+                            max-width: 500px;
+                            margin: 0 auto;
+                            box-shadow: 0 10px 40px rgba(255, 105, 180, 0.3);
+                        }
+                        h1 { color: #FF1493; }
+                    </style>
+                </head>
+                <body>
+                    <div class="error">
+                        <h1>❌ Lỗi</h1>
+                        <p>Token xác nhận không hợp lệ!</p>
+                    </div>
+                </body>
+                </html>
+            `);
+        }
+
+        const [rows] = await db.query(
+            'SELECT * FROM pending_verifications WHERE token = ? AND expires_at > NOW()',
+            [token]
+        );
+
+
+        if (rows.length === 0) {
+            const [expiredRows] = await db.query(
+                'SELECT * FROM pending_verifications WHERE token = ?',
+                [token]
+            );
+
+            if (expiredRows.length > 0) {
+                await db.query('DELETE FROM pending_verifications WHERE token = ?', [token]);
+
+                return res.status(400).send(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <style>
+                            body { 
+                                font-family: Arial; 
+                                text-align: center; 
+                                padding: 50px;
+                                background: linear-gradient(135deg, #FFB6C1, #FFC0CB);
+                            }
+                            .error { 
+                                background: white; 
+                                padding: 40px; 
+                                border-radius: 20px;
+                                max-width: 500px;
+                                margin: 0 auto;
+                                box-shadow: 0 10px 40px rgba(255, 105, 180, 0.3);
+                            }
+                            h1 { color: #FF1493; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="error">
+                            <h1>⏰ Hết hạn</h1>
+                            <p>Link xác nhận đã hết hạn (quá 60 giây)!</p>
+                            <p>Vui lòng đăng ký lại.</p>
+                        </div>
+                    </body>
+                    </html>
+                `);
+            }
+
+            // Token không tồn tại hoặc đã được sử dụng
+            return res.status(400).send(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { 
+                            font-family: Arial; 
+                            text-align: center; 
+                            padding: 50px;
+                            background: linear-gradient(135deg, #FFB6C1, #FFC0CB);
+                        }
+                        .error { 
+                            background: white; 
+                            padding: 40px; 
+                            border-radius: 20px;
+                            max-width: 500px;
+                            margin: 0 auto;
+                            box-shadow: 0 10px 40px rgba(255, 105, 180, 0.3);
+                        }
+                        h1 { color: #FF1493; }
+                    </style>
+                </head>
+                <body>
+                    <div class="error">
+                        <h1>❌ Lỗi</h1>
+                        <p>Link xác nhận không hợp lệ hoặc đã được sử dụng!</p>
+                    </div>
+                </body>
+                </html>
+            `);
+        }
+
+        // Lấy dữ liệu user
+        const userData = JSON.parse(rows[0].user_data);
+
+        console.log('✅ Dữ liệu user:', userData.email);
+
+        // Tạo user trong database
+        await db.query(
+            'INSERT INTO users (name, age, gender, email, password, code, slug) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [
+                userData.displayName,
+                userData.birthday,
+                userData.gender,
+                userData.email,
+                userData.hashedPassword,
+                userData.code,
+                userData.slug
+            ]
+        );
+
+        console.log('✅ Đã tạo user thành công:', userData.email);
+
+        // Xóa khỏi pending_verifications
+        await db.query('DELETE FROM pending_verifications WHERE token = ?', [token]);
+
+        console.log('✅ Đã xóa khỏi pending_verifications');
+
+        // Trả về trang thành công
+        return res.status(200).send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body { 
+                        font-family: Arial; 
+                        text-align: center; 
+                        padding: 50px;
+                        background: linear-gradient(135deg, #FFB6C1, #FFC0CB);
+                    }
+                    .success { 
+                        background: white; 
+                        padding: 40px; 
+                        border-radius: 20px;
+                        max-width: 500px;
+                        margin: 0 auto;
+                        box-shadow: 0 10px 40px rgba(255, 105, 180, 0.3);
+                    }
+                    h1 { color: #FF69B4; }
+                    .heart { font-size: 60px; animation: heartbeat 1.5s infinite; }
+                    @keyframes heartbeat {
+                        0%, 100% { transform: scale(1); }
+                        25% { transform: scale(1.1); }
+                    }
+                </style>
+                <script>
+                    // Tự động đóng tab sau 3 giây
+                    setTimeout(() => {
+                        window.close();
+                    }, 3000);
+                </script>
+            </head>
+            <body>
+                <div class="success">
+                    <div class="heart">💕</div>
+                    <h1>Xác nhận thành công!</h1>
+                    <p>Tài khoản của bạn đã được kích hoạt.</p>
+                    <p>Tab này sẽ tự động đóng sau 3 giây...</p>
+                    <p style="font-size: 12px; color: #999;">Quay lại trang đăng ký để tiếp tục</p>
+                </div>
+            </body>
+            </html>
+        `);
+
+    } catch (error) {
+        console.error('Verification error:', error);
+        res.status(500).send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body { 
+                        font-family: Arial; 
+                        text-align: center; 
+                        padding: 50px;
+                        background: linear-gradient(135deg, #FFB6C1, #FFC0CB);
+                    }
+                    .error { 
+                        background: white; 
+                        padding: 40px; 
+                        border-radius: 20px;
+                        max-width: 500px;
+                        margin: 0 auto;
+                        box-shadow: 0 10px 40px rgba(255, 105, 180, 0.3);
+                    }
+                    h1 { color: #FF1493; }
+                </style>
+            </head>
+            <body>
+                <div class="error">
+                    <h1>❌ Lỗi hệ thống</h1>
+                    <p>Đã xảy ra lỗi khi xác nhận tài khoản!</p>
+                </div>
+            </body>
+            </html>
+        `);
+    }
+};
+
+// API kiểm tra xác thực
+exports.checkVerification = async(req, res) => {
+    try {
+        const { email } = req.query;
+
+        if (!email) {
+            return res.status(400).json({ verified: false });
+        }
+
+        // Kiểm tra trong database
+        const [users] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+
+        if (users.length > 0) {
+            console.log('✅ Email đã được xác thực:', email);
+            return res.json({ verified: true });
+        }
+
+        return res.json({ verified: false });
+
+    } catch (error) {
+        console.error('Check verification error:', error);
+        res.status(500).json({ verified: false });
+    }
+};
+
+// API gửi lại email xác nhận
+exports.resendVerification = async(req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: "Email không hợp lệ!"
+            });
+        }
+
+        // Kiểm tra email đã tồn tại trong users chưa
+        const [existingUser] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+        if (existingUser.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Email này đã được xác nhận!"
+            });
+        }
+
+        // Lấy thông tin pending user từ database
+        const [pendingRows] = await db.query(
+            'SELECT * FROM pending_verifications WHERE email = ?',
+            [email]
+        );
+
+        if (pendingRows.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Không tìm thấy thông tin đăng ký. Vui lòng đăng ký lại!"
+            });
+        }
+
+        const userData = JSON.parse(pendingRows[0].user_data);
+
+        // Tạo token mới
+        const newToken = crypto.randomBytes(20).toString('hex');
+        const expiresAt = new Date(Date.now() + 60000); // 60 seconds
+
+        // Cập nhật token và thời gian hết hạn
+        await db.query(
+            'UPDATE pending_verifications SET token = ?, expires_at = ? WHERE email = ?',
+            [newToken, expiresAt, email]
+        );
+
+        // Gửi email
+        const verificationLink = `${process.env.APP_URL || 'https://mycouple.site'}/auth/verify-email/${newToken}`;
+
+        const mailOptions = {
+            from: {
+                name: '💕 Couple Vibe',
+                address: process.env.GMAIL_USER
+            },
+            to: email,
+            subject: '💗 Xác nhận đăng ký tài khoản - Couple Vibe',
+            html: getVerificationEmailHTML(verificationLink, userData.displayName)
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        return res.json({
+            success: true,
+            message: "Email xác nhận đã được gửi lại!"
+        });
+
+    } catch (error) {
+        console.error('Resend verification error:', error);
+        res.status(500).json({
+            success: false,
+            message: "Có lỗi xảy ra!"
+        });
+    }
+};
+
 
 //Đăng Xuất 
 exports.Logout = (req, res) => {
@@ -181,11 +610,12 @@ exports.Profile = async(req, res) => {
         }
         const userId = req.session.user.id;
         const [user] = await db.query(
-            `SELECT  u.name, u.email, u.age, u.gender, u.code,u.avatar,u.height,u.mbti,u.zodiac,u.address,u.about, c.*
-            FROM users u  
-            JOIN couples c ON (u.code = c.user1_code OR u.code = c.user2_code) 
+            `SELECT  u.name, u.email, u.age, u.gender, u.code,u.avatar,u.height,u.mbti,u.zodiac,u.address,u.about
+            FROM users u 
             WHERE u.id = ?`, [userId]
         );
+        const [checkCouple] = await db.query(`SELECT * FROM couples WHERE user1_code = ? OR user2_code = ? AND status = 1 LIMIT 1`,[userId,userId]);
+
 
         const [listEdu] = await db.query(
             'SELECT * FROM educations WHERE user_id = ? ', [userId]
@@ -208,7 +638,8 @@ exports.Profile = async(req, res) => {
             listEdu,
             listSkill,
             listHobby,
-            listInterest
+            listInterest,
+            checkCouple
         });
     } catch (error) {
         console.error(error);

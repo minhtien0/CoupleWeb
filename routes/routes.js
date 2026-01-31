@@ -17,6 +17,9 @@ const uploadAvatar = require('../middleware/uploadAvatar');
 router.get('/', exampleController.Login);
 router.post('/login', exampleController.postLogin);
 router.post('/register', exampleController.postRegister);
+router.get('/auth/verify-email/:token', exampleController.verifyEmail);
+router.get('/check-verification', exampleController.checkVerification);
+router.post('/resend-verification', exampleController.resendVerification);
 router.post('/logout', exampleController.Logout);
 
 // ===================== CÁC ROUTE CẦN LOGIN =====================

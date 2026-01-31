@@ -126,15 +126,16 @@
                 </div>
                 <div class="avatar-container w-32 h-32 mx-auto mb-4 rounded-full relative">
                     <div class="w-32 h-32 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full flex items-center justify-center overflow-hidden">
-                        <% if (infoUser.avatar) { %>
-                            <img src="<%= infoUser.avatar %>" alt="Avatar" class="w-full h-full object-cover rounded-full">
+                        <% if (infoUser && infoUser.avatar) { %>
+                            <img src="<%= infoUser.avatar %>" alt="Avatar"
+                                class="w-full h-full object-cover rounded-full">
+                        <% } else { %>
+                            <% if (infoUser && infoUser.gender === 'Nam') { %>
+                                <span class="text-5xl">👨</span>
                             <% } else { %>
-                                <% if (infoUser.gender === 1) { %>
-                                    <span class="text-5xl">👨</span>
-                                    <% } else { %>
-                                        <span class="text-5xl">👩</span>
-                                        <% } %>
-                                            <% } %>
+                                <span class="text-5xl">👩</span>
+                            <% } %>
+                        <% } %>
 
                     </div>
 
@@ -152,7 +153,7 @@
                     <div class="flex justify-center">
                         <div class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-medium">
                             ✨
-                            <%= infoUser.status === 1 ? 'Đang yêu' : 'Độc thân' %>
+                            <%= checkCouple.length > 0  ? 'Đang yêu' : 'Độc thân' %>
                         </div>
                     </div>
                 </div>

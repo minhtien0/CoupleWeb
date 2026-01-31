@@ -336,11 +336,103 @@
                             </div>
                         </form>
 
+                        <div id="verification-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                            <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 relative overflow-hidden">
+                                <!-- Background decoration -->
+                                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-400 via-purple-400 to-pink-400"></div>
+
+                                <!-- Heart animation -->
+                                <div class="text-center mb-6">
+                                    <div class="inline-block text-6xl sm:text-7xl animate-bounce">
+                                        💕
+                                    </div>
+                                </div>
+
+                                <!-- Content -->
+                                <div class="text-center">
+                                    <h3 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3">
+                                        Kiểm tra email của bạn!
+                                    </h3>
+                                    <p class="text-sm sm:text-base text-gray-600 mb-6">
+                                        Chúng tôi đã gửi link xác nhận đến email
+                                        <br>
+                                        <span class="font-semibold text-pink-600" id="user-email"></span>
+                                    </p>
+
+                                    <!-- Countdown timer -->
+                                    <div class="mb-6">
+                                        <div class="relative inline-block">
+                                            <svg class="transform -rotate-90 w-32 h-32 sm:w-40 sm:h-40" viewBox="0 0 200 200">
+                        <!-- Background circle -->
+                        <circle cx="100" cy="100" r="90" stroke="#FFE4E1" stroke-width="12" fill="none"/>
+                        <!-- Progress circle -->
+                        <circle id="progress-circle" cx="100" cy="100" r="90" 
+                                stroke="url(#gradient)" 
+                                stroke-width="12" 
+                                fill="none"
+                                stroke-linecap="round"
+                                stroke-dasharray="565.48"
+                                stroke-dashoffset="0"
+                                style="transition: stroke-dashoffset 1s linear"/>
+                        <defs>
+                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#FF69B4;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#FFB6C1;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                                <div class="text-4xl sm:text-5xl font-bold text-pink-600" id="countdown">60</div>
+                                                <div class="text-xs sm:text-sm text-gray-500">giây</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Status message -->
+                                    <div id="verification-status" class="mb-4">
+                                        <div class="bg-pink-50 border-l-4 border-pink-500 p-4 rounded-lg">
+                                            <p class="text-sm text-pink-800">
+                                                ⏰ Vui lòng nhấn vào link trong email để xác nhận
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Success message (hidden by default) -->
+                                    <div id="success-message" class="hidden mb-4">
+                                        <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg">
+                                            <p class="text-sm text-green-800 font-medium">
+                                                ✅ Xác nhận thành công! Đang chuyển hướng...
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Expired message (hidden by default) -->
+                                    <div id="expired-message" class="hidden mb-4">
+                                        <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+                                            <p class="text-sm text-red-800 font-medium">
+                                                ❌ Hết thời gian! Vui lòng đăng ký lại.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Actions -->
+                                    <div class="space-y-3">
+                                        <button id="resend-email" class="w-full py-3 px-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-medium hover:shadow-lg transition-all text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed">
+                    📧 Gửi lại email
+                </button>
+                                        <button id="close-modal" class="w-full py-3 px-4 border-2 border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-all text-sm sm:text-base">
+                    Đóng
+                </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="flex space-x-2 sm:space-x-3">
                             <button onclick="goToStep(1)" class="px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors">
                                 ← Quay lại
                             </button>
-                            <button type="submit" form="personal-form" class="flex-1 py-2.5 sm:py-3 px-4 sm:px-6 text-sm sm:text-base bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-medium hover:shadow-lg transition-all">
+                            <button type="submit" form="personal-form" id="submit-btn" class="flex-1 py-2.5 sm:py-3 px-4 sm:px-6 text-sm sm:text-base bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-medium hover:shadow-lg transition-all">
                                 Tiếp tục →
                             </button>
                         </div>
@@ -524,7 +616,7 @@
             });
         }
 
-        // Choice selection
+
         function selectChoice(choice) {
             selectedChoice = choice;
 
@@ -545,7 +637,7 @@
             goToStep(2);
         }
 
-        // Form validation
+
         function validateStep2() {
             const requiredFields = ['display-name', 'birthday', 'gender', 'email', 'password'];
             let isValid = true;
@@ -740,6 +832,185 @@
                     button.disabled = false;
                 });
         }
+
+        let countdownInterval = null;
+        let verificationCheckInterval = null;
+        let userEmail = '';
+        let currentToken = '';
+
+        document.getElementById("personal-form").addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            const formError = document.getElementById("form-error");
+            formError.textContent = "";
+
+            const submitBtn = document.getElementById("submit-btn");
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Đang xử lý...";
+
+            const dataRegister = {
+                displayName: document.getElementById("display-name").value,
+                birthday: document.getElementById("birthday").value,
+                gender: document.getElementById("gender").value,
+                email: document.getElementById("email").value,
+                password: document.getElementById("password").value
+            };
+
+            userEmail = dataRegister.email;
+
+            try {
+                const res = await fetch("/register", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(dataRegister)
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    formError.textContent = data.message || "Có lỗi xảy ra!";
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Tiếp tục →";
+                    return;
+                }
+
+                // Hiển thị modal và bắt đầu đếm ngược
+                showVerificationModal(dataRegister.email);
+
+            } catch (err) {
+                console.error(err);
+                formError.textContent = "Không thể kết nối tới server!";
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Tiếp tục →";
+            }
+        });
+
+        function showVerificationModal(email) {
+            const modal = document.getElementById("verification-modal");
+            const userEmailSpan = document.getElementById("user-email");
+
+            userEmailSpan.textContent = email;
+            modal.classList.remove("hidden");
+
+            // Bắt đầu đếm ngược
+            startCountdown();
+
+            // Bắt đầu kiểm tra trạng thái xác thực
+            startVerificationCheck(email);
+        }
+
+        function startCountdown() {
+            let timeLeft = 60;
+            const countdownElement = document.getElementById("countdown");
+            const progressCircle = document.getElementById("progress-circle");
+            const circumference = 565.48; // 2 * PI * radius (90)
+
+            clearInterval(countdownInterval);
+
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                countdownElement.textContent = timeLeft;
+
+                // Update progress circle
+                const progress = (timeLeft / 60) * circumference;
+                progressCircle.style.strokeDashoffset = circumference - progress;
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    showExpiredMessage();
+                }
+            }, 1000);
+        }
+
+        function startVerificationCheck(email) {
+            clearInterval(verificationCheckInterval);
+
+            verificationCheckInterval = setInterval(async() => {
+                try {
+                    const res = await fetch(`/check-verification?email=${encodeURIComponent(email)}`);
+                    const data = await res.json();
+
+                    if (data.verified) {
+                        clearInterval(verificationCheckInterval);
+                        clearInterval(countdownInterval);
+                        showSuccessMessage();
+
+                        // Chuyển hướng sau 2 giây
+                        setTimeout(() => {
+                            window.location.href = "/";
+                        }, 2000);
+                    }
+                } catch (err) {
+                    console.error("Lỗi kiểm tra xác thực:", err);
+                }
+            }, 2000); // Kiểm tra mỗi 2 giây
+        }
+
+        function showSuccessMessage() {
+            document.getElementById("verification-status").classList.add("hidden");
+            document.getElementById("expired-message").classList.add("hidden");
+            document.getElementById("success-message").classList.remove("hidden");
+            document.getElementById("resend-email").disabled = true;
+        }
+
+        function showExpiredMessage() {
+            document.getElementById("verification-status").classList.add("hidden");
+            document.getElementById("success-message").classList.add("hidden");
+            document.getElementById("expired-message").classList.remove("hidden");
+            document.getElementById("resend-email").disabled = false;
+        }
+
+        // Gửi lại email
+        document.getElementById("resend-email").addEventListener("click", async function() {
+            const btn = this;
+            btn.disabled = true;
+            btn.textContent = "Đang gửi...";
+
+            try {
+                const res = await fetch("/resend-verification", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        email: userEmail
+                    })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    // Reset countdown và bắt đầu lại
+                    document.getElementById("expired-message").classList.add("hidden");
+                    document.getElementById("verification-status").classList.remove("hidden");
+                    startCountdown();
+                    startVerificationCheck(userEmail);
+                    btn.textContent = "📧 Gửi lại email";
+                } else {
+                    alert(data.message || "Không thể gửi lại email!");
+                    btn.disabled = false;
+                    btn.textContent = "📧 Gửi lại email";
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Có lỗi xảy ra!");
+                btn.disabled = false;
+                btn.textContent = "📧 Gửi lại email";
+            }
+        });
+
+        // Đóng modal
+        document.getElementById("close-modal").addEventListener("click", function() {
+            clearInterval(countdownInterval);
+            clearInterval(verificationCheckInterval);
+            document.getElementById("verification-modal").classList.add("hidden");
+
+            // Reset form
+            document.getElementById("submit-btn").disabled = false;
+            document.getElementById("submit-btn").textContent = "Tiếp tục →";
+        });
 
 
         function forgotPassword() {

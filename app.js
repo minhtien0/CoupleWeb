@@ -3,7 +3,8 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const path = require('path');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
+require('./cron/cleanExpiredPending'); // Thêm dòng này
 // Layout Ejs
 const expressLayouts = require('express-ejs-layouts');
 //Realtime
@@ -67,5 +68,5 @@ app.use('/', exampleRoutes);
 
 // Start server
 http.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
+    console.log(`Server running on port ${port}`);
 });

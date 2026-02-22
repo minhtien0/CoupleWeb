@@ -80,7 +80,7 @@ exports.postLogin = async(req, res) => {
                     name: user[0].name,
                     email: user[0].email,
                     code: user[0].code
-                }
+                },
             });
         } else {
             return res.status(200).json({
@@ -92,7 +92,7 @@ exports.postLogin = async(req, res) => {
                     name: user[0].name,
                     email: user[0].email,
                     code: user[0].code
-                }
+                },
             });
         }
 
@@ -1120,11 +1120,13 @@ exports.getMatching = async(req, res) => {
         const invited = invitedResult || [];
         const randomUsers = randomUsersResult || [];
         const listFavorite = listFavoriteResult || [];
+        const hasCouple = req.session.couple.status === 1;
         res.render('matching', {
             tobeinvited,
             invited,
             randomUsers,
-            listFavorite
+            listFavorite,
+            hasCouple
         });
     } catch (error) {
         console.error(error);

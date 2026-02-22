@@ -189,11 +189,24 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <button onclick="openFilters()" class="p-2 bg-pink-100 rounded-lg hover:bg-pink-200 transition-colors">
+                    <!-- <button onclick="openFilters()" class="p-2 bg-pink-100 rounded-lg hover:bg-pink-200 transition-colors">
                         <svg class="w-5 h-5 text-pink-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46"></polygon>
                         </svg>
-                    </button>
+                    </button> -->
+                    <button onclick="nextHome()" class="p-2 bg-pink-100 rounded-lg hover:bg-pink-200 transition-colors">
+                        <i class="fa-solid fa-children w-5 h-5 text-pink-600"></i>
+                    </button> 
+                    <script>
+                        const hasCouple = <%= hasCouple %>;
+                        function nextHome() {
+                            if (hasCouple!==true) {
+                                alert("Bạn chưa có cặp đôi 💔");
+                            } else {
+                                window.location.href = "/home";
+                            }
+                        }
+                    </script>
                     <button onclick="openMatches()" class="p-2 bg-rose-100 rounded-lg hover:bg-rose-200 transition-colors relative">
                         <svg class="w-5 h-5 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>

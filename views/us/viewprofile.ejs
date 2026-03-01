@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Couple App - Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 3s infinite',
+                        'pulse-color': 'pulse-color 2s ease-in-out infinite alternate',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @keyframes pulse-color {
+            0% {
+                background: linear-gradient(135deg, #f97316, #ec4899);
+            }
+            100% {
+                background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+            }
+        }
+        
+        .profile-card {
+            transition: all 0.3s ease;
+        }
+        
+        .profile-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .skill-tag {
+            transition: all 0.2s ease;
+        }
+        
+        .skill-tag:hover {
+            transform: scale(1.05);
+        }
+        
+        .interest-icon {
+            transition: all 0.3s ease;
+        }
+        
+        .interest-icon:hover {
+            transform: rotate(10deg) scale(1.1);
+        }
+        
+        .avatar-container {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .avatar-overlay {
+            pointer-events: none
+        }
+        
+        .avatar-container:hover .avatar-overlay {
+            opacity: 1;
+        }
+        
+        .personality-bar {
+            background: linear-gradient(90deg, var(--start-color), var(--end-color));
+            height: 6px;
+            border-radius: 3px;
+            transition: all 0.5s ease;
+        }
+        
+        .compatibility-ring {
+            stroke-dasharray: 251.2;
+            stroke-dashoffset: calc(251.2 - (251.2 * var(--compatibility) / 100));
+            transition: stroke-dashoffset 1s ease-in-out;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-emerald-50 to-cyan-50 font-sans">
+
+    <!-- Header -->
+    <div class="bg-white/80 backdrop-blur-sm border-b border-rose-100 sticky top-0 z-20">
+        <div class="max-w-md mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <button onclick="window.location.href='/matching'" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                        <svg class="w-5 h-5 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15,18 9,12 15,6"></polyline>
+                        </svg>
+                    </button>
+                    <div>
+                        <h1 class="text-lg font-semibold text-gray-800">Hồ sơ cá nhân</h1>
+                        <p class="text-sm text-gray-600">Chỉnh sửa thông tin</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-md mx-auto px-4 py-6 space-y-6 pb-24">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="text-center mb-6">
+                <div class="flex items-center space-x-2">
+                   
+                </div>
+                <div class="avatar-container w-32 h-32 mx-auto mb-4 rounded-full relative">
+                    <div id="avatarTrigger" onclick="openAvatar()" class="w-32 h-32 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full flex items-center justify-center overflow-hidden cursor-pointer">
+                        <% if (infoUser && infoUser.avatar) { %>
+                            <img src="<%= infoUser.avatar %>" alt="Avatar" class="w-full h-full object-cover rounded-full">
+                        <% } else { %>
+                            <% if (infoUser && infoUser.gender === 'Nam') { %>
+                                <span class="text-5xl">👨</span>
+                            <% } else { %>
+                                <span class="text-5xl">👩</span>
+                            <% } %>
+                        <% } %>
+                    </div>
+                    <div class="avatar-overlay rounded-full absolute inset-0 flex items-center justify-center">
+                        <!-- Có thể thêm icon zoom ở đây nếu muốn, ví dụ: <span class="text-white text-2xl">🔍</span> -->
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <input readonly id="display-name" value="<%=infoUser.name%>" class="w-full text-center text-2xl font-bold text-gray-800 bg-transparent border-b-2 border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none transition-colors">
+                    </div>
+                    <div class="flex justify-center">
+                        <div class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-medium">
+                            ✨
+                            <%= checkCouple.length > 0  ? 'Đang yêu' : 'Độc thân' %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col items-center justify-center p-4 bg-emerald-50 rounded-2xl">
+                    <div class="flex items-center justify-center gap-2 text-emerald-600 font-semibold">
+                        <span class="text-xl">🎂</span>
+                        <%
+                        let birth = infoUser.age ? new Date(infoUser.age) : null;
+                        let formatted = birth
+                        ? `${birth.getDate().toString().padStart(2,'0')}/${
+                            (birth.getMonth()+1).toString().padStart(2,'0')
+                            }/${birth.getFullYear()}`
+                        : '';
+                        %>
+                        <span id="birth-date" class="bg-transparent text-center outline-none font-bold text-lg w-full max-w-[140px]"><%= formatted %></span>
+                    </div>
+                    <div class="mt-1 text-xs text-gray-500 tracking-wide">Ngày sinh</div>
+                </div>
+                <div class="flex flex-col items-center justify-center p-4 bg-cyan-50 rounded-2xl">
+                    <span id="gender" class="bg-transparent text-center outline-none font-bold text-lg text-cyan-600 w-full max-w-[140px] appearance-none">
+                        <%= infoUser.gender === 'Nam' ? '👨 Nam' : '👩 Nữ' %>
+                    </span>
+                    <div class="mt-1 text-xs text-gray-500 tracking-wide">Giới tính</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Basic Information -->
+        <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Thông tin cơ bản</h2>
+            </div>
+
+            <div class="space-y-4" id="basic-info">
+
+                <!-- Sinh nhật -->
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Sinh nhật</span>
+                    <span type="date" id="birth-date" class="basic-input text-right"><%= formatted %></span>
+                </div>
+
+                <!-- Chiều cao -->
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Chiều cao</span>
+                    <input type="number" id="height" value="<%= infoUser.height || '' %>" placeholder="Trống" disabled class="basic-input text-right"><span class="text-gray-500">cm</span>
+                </div>
+
+                <!-- Zodiac -->
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Cung hoàng đạo</span>
+                    <select id="zodiac" disabled class="basic-input text-right">
+                <option value="">Trống</option>
+                <% const zodiacs = [
+                    '♓ Song Ngư','♈ Bạch Dương','♉ Kim Ngưu','♊ Song Tử','♋ Cự Giải','♌ Sư Tử',
+                    '♍ Xử Nữ','♎ Thiên Bình','♏ Bọ Cạp','♐ Nhân Mã','♑ Ma Kết','♒ Bảo Bình'
+                ]; %>
+                <% zodiacs.forEach(z => { %>
+                    <option value="<%= z %>" <%= infoUser.zodiac === z ? 'selected' : '' %>>
+                        <%= z %>
+                    </option>
+                <% }) %>
+            </select>
+                </div>
+
+                <!-- MBTI -->
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">MBTI</span>
+                    <select id="mbti" disabled class="basic-input text-right">
+                <option value="">Trống</option>
+                <% const mbtis = [
+                    'INFJ - Nhà vận động','INTJ - Kiến trúc sư','INTP - Nhà tư tưởng','ENFP - Nhà vận động','ENFJ - Nhà lãnh đạo','ENTJ - Chỉ huy quan','ENTP - Nhà tranh luận','ISFP - Nhà thám hiểm',
+                    'ISFJ - Nhà bảo vệ','ISTJ - Nhà hậu cần','ISTP - Nhà kỹ thuật','ESFP - Nghệ sĩ','ESFJ - Người thi hành','ESTJ - Người điều hành','ESTP - Doanh nhân','INFP - Nhà trung gian'
+                ]; %>
+                <% mbtis.forEach(m => { %>
+                    <option value="<%= m %>" <%= infoUser.mbti === m ? 'selected' : '' %>>
+                        <%= m %>
+                    </option>
+                <% }) %>
+            </select>
+                </div>
+
+                <!-- Địa chỉ -->
+                <div class="flex items-start justify-between">
+                    <span class="text-gray-600 mt-2">Địa chỉ</span>
+                    <textarea id="address" rows="2" placeholder="Trống" disabled class="basic-input resize-none w-40 text-right"><%= infoUser.address || '' %></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Education & Career -->
+        <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Học vấn & Sự nghiệp</h2>
+            </div>
+            <div class="space-y-4" id="edu-list">
+                <% if (listEdu && listEdu.length > 0) { %>
+                    <% listEdu.forEach(edu => { %>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mt-1">
+                                <span class="text-lg">🎓</span>
+                            </div>
+                            <div class="flex-1">
+                                <input type="text" value="<%= edu.school %>" class="w-full font-medium text-gray-800 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none">
+                                <input type="text" value="<%= edu.major %>" class="w-full text-sm text-gray-600 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none mt-1">
+                                <input type="text" value="<%= edu.year %>" class="w-full text-xs text-gray-500 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-emerald-500 focus:outline-none mt-1">
+                            </div>
+                        </div>
+                        <% }) %>
+                            <% } else { %>
+                                <span class="text-gray-400">Trống</span>
+                                <% } %>
+            </div>
+
+        </div>
+
+        <!-- Skills & Talents -->
+        <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Kỹ năng & Tài năng</h2>
+            </div>
+            <div class="flex flex-wrap gap-2" id="skills-list">
+                <% if (listSkill && listSkill.length > 0) { %>
+                    <% listSkill.forEach(skill => { %>
+                        <span class="skill-tag bg-rose-100 text-rose-700 px-3 py-2 rounded-full text-sm font-medium cursor-pointer">
+                    <%= skill.icon %> <%= skill.name %>
+                </span>
+                        <% }) %>
+                            <% } else { %>
+                                <span class="text-gray-400">Trống</span>
+                                <% } %>
+            </div>
+        </div>
+
+        <!-- Interests & Hobbies -->
+        <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Sở thích</h2>
+            </div>
+            <div class="grid grid-cols-4 gap-4" id="interest-list">
+                <% if (listInterest && listInterest.length > 0) { %>
+                    <% listInterest.forEach(inter => { %>
+                        <div class="text-center">
+                            <div class="interest-icon w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center mx-auto mb-2 cursor-pointer">
+                                <span class="text-xl"><%=inter.icon%></span>
+                            </div>
+                            <span class="text-xs text-gray-600"><%=inter.name%></span>
+                        </div>
+                        <% }) %>
+                            <% } else { %>
+                                <span class="text-gray-400">Trống</span>
+                                <% } %>
+            </div>
+        </div>
+
+        <!-- About Me -->
+        <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Về bản thân</h2>
+            </div>
+            <textarea readonly id="about-me" class="w-full p-4 bg-gray-50 rounded-xl border border-gray-200
+    focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200
+    focus:outline-none resize-none transition-colors" rows="6" placeholder="Viết vài dòng về bản thân..."><%= infoUser.about || '' %></textarea>
+
+        </div>
+
+        <!-- Goals & Dreams -->
+        <div class="profile-card bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Mục tiêu & Ước mơ</h2>               
+            </div>
+            <div class="space-y-4" id="hobby-list">
+                <% if (listHobby && listHobby.length > 0) { %>
+                    <% listHobby.forEach(hobby => { %>
+                        <div class="flex items-start space-x-3 p-3 bg-rose-50 rounded-xl">
+                            <div class="w-8 h-8 bg-rose-200 rounded-lg flex items-center justify-center mt-1">
+                                <span class="text-sm"><%=hobby.icon%></span>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-medium text-gray-800">
+                                    <%=hobby.title%>
+                                </h4>
+                                <p class="text-sm text-gray-600">
+                                    <%=hobby.content%>
+                                </p>
+                            </div>
+                        </div>
+                        <% }) %>
+                            <% } else { %>
+                                <span class="text-gray-400">Trống</span>
+                                <% } %>
+            </div>
+        </div>
+
+        <!-- Compatibility Score -->
+        <div class="bg-gradient-to-br from-pink-100 to-purple-100 rounded-2xl p-6 shadow-sm border border-rose-200">
+            <div class="text-center mb-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-2">Độ tương thích</h2>
+                <p class="text-sm text-gray-600">Với Minh</p>
+            </div>
+            <div class="flex items-center justify-center mb-4">
+                <div class="relative">
+                    <svg class="w-32 h-32 transform -rotate-90">
+                        <circle cx="64" cy="64" r="40" stroke="#e5e7eb" stroke-width="6" fill="none" />
+                        <circle cx="64" cy="64" r="40" stroke="url(#gradient)" stroke-width="6" fill="none" 
+                                stroke-linecap="round" class="compatibility-ring" style="--compatibility: 87" />
+                        <defs>
+                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#f97316"/>
+                                <stop offset="100%" style="stop-color:#ec4899"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <span class="text-2xl font-bold text-gray-800">87%</span>
+                        <span class="text-xs text-gray-500">Tương thích</span>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 text-center">
+                <div>
+                    <div class="text-lg font-bold text-emerald-600">92%</div>
+                    <div class="text-xs text-gray-600">Sở thích</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-blue-600">85%</div>
+                    <div class="text-xs text-gray-600">Lối sống</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-purple-600">89%</div>
+                    <div class="text-xs text-gray-600">Tính cách</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-rose-600">83%</div>
+                    <div class="text-xs text-gray-600">Mục tiêu</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Avatar Modal -->
+    <div id="avatarModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div id="modalBackdrop" class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeAvatar()"></div>
+        
+        <!-- Modal Content -->
+        <div class="relative z-10 w-full max-w-sm mx-auto">
+            <!-- Close Button -->
+            <button onclick="closeAvatar()" 
+                class="absolute -top-12 right-0 text-white/80 hover:text-white text-sm font-medium flex items-center gap-1 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                Đóng
+            </button>
+
+            <!-- Avatar Image -->
+            <div id="modalImageWrapper" class="rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white/20 transform transition-all duration-300 scale-90 opacity-0">
+                <% if (infoUser && infoUser.avatar) { %>
+                    <img src="<%= infoUser.avatar %>" alt="Avatar" 
+                        class="w-full h-full object-cover aspect-square">
+                <% } else { %>
+                    <div class="w-full aspect-square bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center">
+                        <span class="text-9xl">
+                            <%= infoUser && infoUser.gender === 'Nam' ? '👨' : '👩' %>
+                        </span>
+                    </div>
+                <% } %>
+            </div>
+
+            <!-- Name Badge -->
+            <div class="mt-4 text-center">
+                <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium">
+                    <span>✨</span>
+                    <span><%=infoUser.name%></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    function openAvatar() {
+        const modal = document.getElementById("avatarModal");
+        const wrapper = document.getElementById("modalImageWrapper");
+
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+
+        // Trigger animation sau 1 frame
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                wrapper.classList.remove("scale-90", "opacity-0");
+                wrapper.classList.add("scale-100", "opacity-100");
+            });
+        });
+
+        // Prevent body scroll
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeAvatar() {
+        const modal = document.getElementById("avatarModal");
+        const wrapper = document.getElementById("modalImageWrapper");
+
+        wrapper.classList.remove("scale-100", "opacity-100");
+        wrapper.classList.add("scale-90", "opacity-0");
+
+        setTimeout(() => {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+            document.body.style.overflow = "";
+        }, 300);
+    }
+
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && !document.getElementById("avatarModal").classList.contains("hidden")) {
+            closeAvatar();
+        }
+    });
+</script>
+</body>
+
+</html>

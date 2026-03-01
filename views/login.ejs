@@ -509,7 +509,7 @@
                     </div>
 
                     <!-- Login Form -->
-                    <div id="login-form" class="space-y-4 sm:space-y-6 hidden">
+                    <form id="login-form" onsubmit="login(event)" class="space-y-4 sm:space-y-6 hidden">
                         <div class="text-center mb-4 sm:mb-6">
                             <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Đăng nhập</h2>
                             <p class="text-sm sm:text-base text-gray-600">Chào mừng trở lại!</p>
@@ -535,22 +535,22 @@
                                     <input type="checkbox" class="rounded border-gray-300 text-pink-500 focus:ring-pink-500">
                                     <span class="ml-2 text-gray-600">Ghi nhớ đăng nhập</span>
                                 </label>
-                                <button onclick="forgotPassword()" class="text-pink-600 hover:text-pink-700 font-medium">
+                                <button type="button" onclick="forgotPassword()" class="text-pink-600 hover:text-pink-700 font-medium">
                                     Quên mật khẩu?
                                 </button>
                             </div>
                         </div>
 
-                        <button type="submit" onclick="login(event)" class="w-full py-3 sm:py-4 text-sm sm:text-base bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-medium hover:shadow-lg transition-all">
+                        <button type="submit" id="login-btn" class="w-full py-3 sm:py-4 text-sm sm:text-base bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-medium hover:shadow-lg transition-all">
                             Đăng nhập
                         </button>
 
                         <div class="text-center">
-                            <button onclick="showRegister()" class="text-gray-600 hover:text-gray-800 text-xs sm:text-sm transition-colors">
+                            <button type="button" onclick="showRegister()" class="text-gray-600 hover:text-gray-800 text-xs sm:text-sm transition-colors">
                                 Chưa có tài khoản? <span class="font-medium underline">Đăng ký ngay</span>
                             </button>
                         </div>
-                    </div>
+                    </form>
                 </div>
 
                 <!-- Terms & Privacy -->
@@ -770,31 +770,22 @@
         }
 
         function login(event) {
-            // Không cần preventDefault nếu không trong form, nhưng giữ để an toàn
             if (event) event.preventDefault();
-
             const email = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value.trim();
             const errorElement = document.getElementById('login-error');
-            const button = event ? event.target : document.querySelector('button[onclick="login()"]'); // Fallback nếu không có event
+            const button = document.getElementById('login-btn');
             const originalText = button.textContent;
-
-            // Reset lỗi trước đó
             if (errorElement) errorElement.textContent = '';
-
             // 1. Kiểm tra không bỏ trống (KHÔNG thay đổi nút ở đây)
             if (!email || !password) {
                 if (errorElement) errorElement.textContent = 'Vui lòng nhập email và mật khẩu!';
-                console.log('Validation fail: Missing fields'); // Debug
-                return; // Dừng, không loading, không gửi request
+                console.log('Validation fail: Missing fields');
+                return;
             }
-
-            console.log('Validation pass: Starting loading and request'); // Debug
-
             // 2. Hiệu ứng loading CHỈ khi validation pass (gửi request hợp lệ)
             button.textContent = '🔄 Đang đăng nhập...';
             button.disabled = true;
-
             // 3. Gửi AJAX request
             fetch('/login', {
                     method: 'POST',
@@ -808,18 +799,13 @@
                 })
                 .then(res => res.json())
                 .then(data => {
-                    console.log('Server response:', data); // Debug
                     if (data.success) {
-                        // ✅ Đăng nhập thành công
                         showSuccessOverlay();
                         setTimeout(() => {
-                            window.location.href = data.redirect; // Tự động chuyển /matching hoặc /home
+                            window.location.href = data.redirect; 
                         }, 3000);
                     } else {
-                        // ❌ Sai email hoặc mật khẩu (KHÔI PHỤC NÚT)
                         if (errorElement) errorElement.textContent = data.message || 'Email hoặc mật khẩu không đúng!';
-                        // Không dùng alert để tránh popup; chỉ hiển thị message
-                        console.log('Login fail:', data.message);
                         button.textContent = originalText;
                         button.disabled = false;
                     }
@@ -827,7 +813,6 @@
                 .catch(err => {
                     console.error('Lỗi:', err);
                     if (errorElement) errorElement.textContent = 'Không thể kết nối tới server!';
-                    // KHÔI PHỤC NÚT
                     button.textContent = originalText;
                     button.disabled = false;
                 });
@@ -875,8 +860,6 @@
                     submitBtn.textContent = "Tiếp tục →";
                     return;
                 }
-
-                // Hiển thị modal và bắt đầu đếm ngược
                 showVerificationModal(dataRegister.email);
 
             } catch (err) {
@@ -1012,14 +995,6 @@
             document.getElementById("submit-btn").textContent = "Tiếp tục →";
         });
 
-
-        function forgotPassword() {
-            const email = prompt('Nhập email để đặt lại mật khẩu:');
-            if (email) {
-                alert(`Đã gửi link đặt lại mật khẩu tới ${email}!\nVui lòng kiểm tra email của bạn.`);
-            }
-        }
-
         // Registration flow
         function completeRegistration() {
             // Collect user data
@@ -1153,31 +1128,6 @@
             alert('Mã couple đã được gửi lại qua:\n\n📧 Email\n📱 SMS\n💬 Các ứng dụng nhắn tin\n\nHãy kiểm tra và chia sẻ với người yêu!');
         }
 
-        // Enhanced error handling
-        function handleError(error, context) {
-            console.error(`Error in ${context}:`, error);
-
-            let userMessage = 'Có lỗi xảy ra. Vui lòng thử lại sau.';
-
-            switch (context) {
-                case 'registration':
-                    userMessage = 'Không thể tạo tài khoản. Vui lòng kiểm tra thông tin và thử lại.';
-                    break;
-                case 'login':
-                    userMessage = 'Thông tin đăng nhập không chính xác.';
-                    break;
-                case 'couple_connection':
-                    userMessage = 'Không thể kết nối couple. Kiểm tra mã và thử lại.';
-                    break;
-            }
-
-            alert(userMessage);
-        }
-
-        // Social login simulation (future feature)
-        function socialLogin(provider) {
-            alert(`Tính năng đăng nhập bằng ${provider} sẽ có trong phiên bản tiếp theo! 🚀`);
-        }
 
         // Demo data for testing
         function fillDemoData() {

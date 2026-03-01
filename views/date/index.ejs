@@ -978,16 +978,6 @@
                         }
                     });
             }
-            document.addEventListener('DOMContentLoaded', function() {
-                const tabs = document.querySelectorAll('[data-tab]');
-                tabs.forEach(tab => {
-                    tab.addEventListener('click', () => {
-                        if (tab.dataset.tab !== 'Date') {
-                            alert(`Chuyển đến trang ${tab.dataset.tab}`);
-                        }
-                    });
-                });
-            });
         </script>
 </body>
 

@@ -29,7 +29,7 @@
                 <span class="text-xs font-medium">Journey</span>
             </button>
 
-            <button data-path="/memories" onclick="window.location.href='/memories'" class="nav-btn flex flex-col items-center py-2 px-3 rounded-xl transition-colors text-gray-400 hover:text-gray-600" data-tab="Memories">
+            <button data-path="/memories" onclick="window.location.href='/memories'" class="nav-btn flex flex-col items-center py-2 px-3 rounded-xl transition-colors hover:text-gray-600" data-tab="Memories">
                 <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2v11z"></path>
                     <circle cx="12" cy="13" r="4"></circle>
@@ -203,7 +203,10 @@
     // ====== REALTIME: Nhận thông báo mới từ socket ======
     socket.on("new_notification", (data) => {
         const { notification, unreadCount: newUnreadCount } = data;
-        
+        const audio = new Audio('/sound/amthanh_thongbao.mp3');
+            audio.play().catch(err => {
+                console.log("Autoplay bị chặn:", err);
+            });
         // Cập nhật unreadCount từ server
         unreadCount = newUnreadCount;
         updateBadge();
@@ -329,11 +332,11 @@
             if (btn.dataset.path === current) {
                 btn.classList.add("text-rose-600", "bg-rose-50");
                 let svg = btn.querySelector("svg");
-                if (svg) svg.classList.add("fill-rose-600");
+                if (svg) svg.classList.add("text-rose-600");
             } else {
                 btn.classList.add("text-gray-400", "hover:text-gray-600");
                 let svg = btn.querySelector("svg");
-                if (svg) svg.classList.remove("fill-rose-600");
+                if (svg) svg.classList.remove("text-rose-600");
             }
         });
     });

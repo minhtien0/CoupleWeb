@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const transporter = require('../config/email');
 const { getVerificationEmailHTML } = require('../views/emailTemplate');
+const { userSockets, io } = require("../app");
 
 exports.getHome = (req, res) => {
     res.render('index'); // Render view
@@ -145,8 +146,7 @@ exports.postRegister = async(req, res) => {
 
         // 5. Kiểm tra email đang chờ xác nhận (trong pending_verifications)
         const [pendingCheck] = await db.query(
-            'SELECT * FROM pending_verifications WHERE email = ? AND expires_at > NOW()',
-            [email]
+            'SELECT * FROM pending_verifications WHERE email = ? AND expires_at > NOW()', [email]
         );
 
         if (pendingCheck.length > 0) {
@@ -224,8 +224,7 @@ exports.postRegister = async(req, res) => {
 
         // Insert mới
         await db.query(
-            'INSERT INTO pending_verifications (email, token, user_data, expires_at) VALUES (?, ?, ?, ?)',
-            [email, token, JSON.stringify(userData), expiresAt]
+            'INSERT INTO pending_verifications (email, token, user_data, expires_at) VALUES (?, ?, ?, ?)', [email, token, JSON.stringify(userData), expiresAt]
         );
 
         console.log('✅ Token đã tạo:', token);
@@ -263,7 +262,7 @@ exports.postRegister = async(req, res) => {
 
 exports.verifyEmail = async(req, res) => {
     try {
-        const { token } = req.params; 
+        const { token } = req.params;
 
         if (!token) {
             return res.status(400).send(`
@@ -300,15 +299,13 @@ exports.verifyEmail = async(req, res) => {
         }
 
         const [rows] = await db.query(
-            'SELECT * FROM pending_verifications WHERE token = ? AND expires_at > NOW()',
-            [token]
+            'SELECT * FROM pending_verifications WHERE token = ? AND expires_at > NOW()', [token]
         );
 
 
         if (rows.length === 0) {
             const [expiredRows] = await db.query(
-                'SELECT * FROM pending_verifications WHERE token = ?',
-                [token]
+                'SELECT * FROM pending_verifications WHERE token = ?', [token]
             );
 
             if (expiredRows.length > 0) {
@@ -389,8 +386,7 @@ exports.verifyEmail = async(req, res) => {
 
         // Tạo user trong database
         await db.query(
-            'INSERT INTO users (name, age, gender, email, password, code, slug) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [
+            'INSERT INTO users (name, age, gender, email, password, code, slug) VALUES (?, ?, ?, ?, ?, ?, ?)', [
                 userData.displayName,
                 userData.birthday,
                 userData.gender,
@@ -539,8 +535,7 @@ exports.resendVerification = async(req, res) => {
 
         // Lấy thông tin pending user từ database
         const [pendingRows] = await db.query(
-            'SELECT * FROM pending_verifications WHERE email = ?',
-            [email]
+            'SELECT * FROM pending_verifications WHERE email = ?', [email]
         );
 
         if (pendingRows.length === 0) {
@@ -558,8 +553,7 @@ exports.resendVerification = async(req, res) => {
 
         // Cập nhật token và thời gian hết hạn
         await db.query(
-            'UPDATE pending_verifications SET token = ?, expires_at = ? WHERE email = ?',
-            [newToken, expiresAt, email]
+            'UPDATE pending_verifications SET token = ?, expires_at = ? WHERE email = ?', [newToken, expiresAt, email]
         );
 
         // Gửi email
@@ -614,7 +608,7 @@ exports.Profile = async(req, res) => {
             FROM users u 
             WHERE u.id = ?`, [userId]
         );
-        const [checkCouple] = await db.query(`SELECT * FROM couples WHERE user1_code = ? OR user2_code = ? AND status = 1 LIMIT 1`,[userId,userId]);
+        const [checkCouple] = await db.query(`SELECT * FROM couples WHERE user1_code = ? OR user2_code = ? AND status = 1 LIMIT 1`, [userId, userId]);
 
 
         const [listEdu] = await db.query(
@@ -1102,30 +1096,64 @@ exports.getMatching = async(req, res) => {
         // Query cho tab "Sent" (lời mời đã gửi)
         const [invitedResult] = await db.query(
             `
-                    SELECT u.*, c.started_at, c.id AS couples_id, c.status FROM users u JOIN couples c ON u.code = c.user2_code WHERE c.status = 0 OR c.status = 2 AND c.user1_code = ?
+                    SELECT u.*, c.started_at, c.id AS couples_id, c.status FROM users u JOIN couples c ON u.code = c.user2_code WHERE (c.status = 0 OR c.status = 2) AND c.user1_code = ?
                     `, [user.code]
         );
         //Random User Matching
         const [randomUsersResult] = await db.query(`
                     SELECT u.*
-                    FROM users u LEFT JOIN couples c ON(u.code = c.user1_code OR u.code = c.user2_code) WHERE u.id != ?
-                    AND(c.status IS NULL OR c.status != 1) ORDER BY RAND() LIMIT 10 `, [user.id]);
+                    FROM users u
+                    WHERE u.id != ?
+                    AND NOT EXISTS (
+                        SELECT 1 FROM couples c
+                        WHERE (u.code = c.user1_code OR u.code = c.user2_code)
+                        AND c.status = 1
+                    )
+                    ORDER BY RAND()
+                    LIMIT 10 `, [user.id]);
 
         const [listFavoriteResult] = await db.query(`
                     SELECT u.*
                     FROM users u LEFT JOIN list_favorites f ON(u.id = f.user_favorite) WHERE f.user = ?
                     `, [user.id]);
+
+        const [countFavTodayResult] = await db.query(`
+            SELECT COUNT(*) AS totalFavToday
+            FROM list_favorites
+            WHERE user_favorite = ?
+            AND DATE(created_at) = CURDATE()
+        `, [user.id]);
+
+        const [totalFavResult] = await db.query(`
+             SELECT COUNT(*) AS totalFav
+             FROM list_favorites 
+             WHERE user_favorite = ?
+            `, [user.id]);
+        
+        const [totalViewsProfileResualt] = await db.query(
+                `SELECT COUNT(*) as total 
+                 FROM profile_views 
+                 WHERE target_id = ?`,
+                [user.id]
+            );
         // Correct: tobeinvitedResult is already the rows array
         const tobeinvited = tobeinvitedResult || [];
         const invited = invitedResult || [];
         const randomUsers = randomUsersResult || [];
         const listFavorite = listFavoriteResult || [];
-        const hasCouple = req.session.couple.status === 1;
+        const countFavToday = countFavTodayResult[0]?.totalFavToday || 0;
+        const totalFav = totalFavResult[0]?.totalFav || 0;
+        const hasCouple = req.session.couple?.status === 1;
+        const totalViewsProfile= totalViewsProfileResualt[0]?.total || 0;
+
         res.render('matching', {
             tobeinvited,
             invited,
             randomUsers,
             listFavorite,
+            countFavToday,
+            totalViewsProfile,
+            totalFav,
             hasCouple
         });
     } catch (error) {
@@ -1134,42 +1162,54 @@ exports.getMatching = async(req, res) => {
     }
 };
 
+//Gửi lời mời
 exports.sendInvite = async(req, res) => {
     try {
-        const user1 = req.session.user.id; // người gửi lời mời
-        const user1_code = req.session.user.code;
-
+        const user1 = req.session.user;
+        const user1_code = user1.code;
         const { user2_id } = req.body;
+
         if (!user2_id) {
             return res.json({ success: false, message: "Thiếu user2_id!" });
         }
 
-        // Lấy user2_code từ DB
         const [rows] = await db.query(
-            "SELECT code FROM users WHERE id = ? LIMIT 1", [user2_id]
+            "SELECT code, name, avatar FROM users WHERE id = ? LIMIT 1", [user2_id]
         );
 
         if (!rows.length) {
             return res.json({ success: false, message: "User không tồn tại!" });
         }
 
-        const user2_code = rows[0].code;
+        const user2 = rows[0];
 
-        // Kiểm tra đã tồn tại lời mời 2 chiều chưa
         const [exist] = await db.query(`
-                    SELECT id FROM couples WHERE(user1_code = ? AND user2_code = ? ) OR(user1_code = ? AND user2_code = ? ) LIMIT 1 `, [user1_code, user2_code, user2_code, user1_code]);
+            SELECT id FROM couples
+            WHERE (user1_code = ? AND user2_code = ?)
+               OR (user1_code = ? AND user2_code = ?)
+            LIMIT 1
+        `, [user1_code, user2.code, user2.code, user1_code]);
 
-        if (exist.length > 0) {
-            return res.json({
-                success: false,
-                message: "Hai bạn đã có lời mời hoặc đã thành đôi!",
-            });
+        if (exist.length) {
+            return res.json({ success: false, message: "Đã tồn tại lời mời!" });
         }
 
-        // Tạo lời mời mới
-        await db.query(`
-                    INSERT INTO couples(user1_code, user2_code, status, started_at) VALUES( ? , ? , 0, NOW())
-                    `, [user1_code, user2_code]);
+        const [result] = await db.query(`
+            INSERT INTO couples(user1_code, user2_code, status, is_seen, started_at)
+            VALUES (?, ?, 0, 0, NOW())
+        `, [user1_code, user2.code]);
+
+        if (global._io && user2_id) {
+            global._io.to(`user_${user2_id}`).emit("new-invite", {
+                couples_id: result.insertId,
+                from: {
+                    code: user1_code,
+                    name: user1.name,
+                    avatar: user1.avatar
+                },
+                started_at: new Date()
+            });
+        }
 
         return res.json({ success: true });
 
@@ -1177,6 +1217,34 @@ exports.sendInvite = async(req, res) => {
         console.error(err);
         res.json({ success: false, message: "Lỗi server!" });
     }
+};
+
+//Đếm số lượng lời mời chưa xem 
+exports.getUnseenCount = async(req, res) => {
+    const user_code = req.session.user.code;
+
+    const [rows] = await db.query(`
+        SELECT COUNT(*) AS total
+        FROM couples
+        WHERE user2_code = ?
+        AND status = 0
+        AND is_seen = 0
+    `, [user_code]);
+
+    res.json({ total: rows[0].total });
+};
+
+//Đánh dấu đã xem
+exports.markSeen = async(req, res) => {
+    const user_code = req.session.user.code;
+    await db.query(`
+        UPDATE couples
+        SET is_seen = 1
+        WHERE user2_code = ?
+        AND status = 0
+    `, [user_code]);
+
+    res.json({ success: true });
 };
 
 exports.addFavorite = async(req, res) => {
@@ -1191,7 +1259,9 @@ exports.addFavorite = async(req, res) => {
         // Kiểm tra đã tồn tại để tránh duplicate
         const [exists] = await db.query(
             `
-                    SELECT id FROM list_favorites WHERE user = ? AND user_favorite = ? LIMIT 1 `, [user, user_favorite]
+            SELECT id 
+            FROM list_favorites 
+            WHERE user = ? AND user_favorite = ? LIMIT 1 `, [user, user_favorite]
         );
 
         if (exists.length > 0) {
@@ -1203,10 +1273,37 @@ exports.addFavorite = async(req, res) => {
 
         // Thêm mới
         await db.query(
-            `
-                    INSERT INTO list_favorites(user, user_favorite, created_at) VALUES( ? , ? , UNIX_TIMESTAMP())
-                    `, [user, user_favorite]
+            `INSERT INTO list_favorites(user, user_favorite, created_at) VALUES( ? , ? , NOW())`, [user, user_favorite]
         );
+
+        const [
+            [countToday]
+        ] = await db.query(`
+            SELECT COUNT(*) as total
+            FROM list_favorites
+            WHERE user_favorite = ?
+            AND DATE(created_at) = CURDATE()
+        `, [user_favorite]);
+
+        const [
+            [totalFav]
+        ] = await db.query(`
+            SELECT COUNT(*) as total
+            FROM list_favorites
+            WHERE user_favorite = ?
+        `, [user_favorite]);
+
+        if (global._io) {
+            global._io.to(`user_${user_favorite}`).emit("new-favorite", {
+                from: {
+                    id: user.id,
+                    name: user.name,
+                    avatar: user.avatar
+                },
+                countToday: countToday.total,
+                totalFav: totalFav.total
+            });
+        }
 
         return res.json({
             success: true,
@@ -1223,7 +1320,6 @@ exports.addFavorite = async(req, res) => {
 exports.rejectInvite = async(req, res) => {
     try {
         const couples_id = req.params.couples_id;
-        console.log('Id couple nhận được:', couples_id);
         // Lấy yêu cầu kết nối
         const [rows] = await db.query(
             `
@@ -1305,5 +1401,80 @@ exports.cancelInvite = async(req, res) => {
     } catch (err) {
         console.error(err);
         res.json({ status: "error", message: "Lỗi server!" });
+    }
+};
+
+exports.seenProfile = async(req, res) => {
+    try {
+        if (!req.session || !req.session.user) {
+            return res.redirect('/');
+        }
+        const viewerId = req.session.user.id; 
+        const targetId = parseInt(req.params.id);
+        // Không tự xem mình
+        if (viewerId !== targetId) {
+            await db.query(
+                `INSERT IGNORE INTO profile_views 
+                 (viewer_id, target_id, created_at) 
+                 VALUES (?, ?, NOW())`,
+                [viewerId, targetId]
+            );
+        }
+
+        const [user] = await db.query(
+            `SELECT  u.name, u.email, u.age, u.gender, u.code,u.avatar,u.height,u.mbti,u.zodiac,u.address,u.about
+            FROM users u 
+            WHERE u.id = ?`, [targetId]
+        );
+        const users = user[0];
+        const [checkCouple] = await db.query(`SELECT * FROM couples WHERE user1_code = ? OR user2_code = ? AND status = 1 LIMIT 1`, [targetId, targetId]);
+
+
+        const [listEdu] = await db.query(
+            'SELECT * FROM educations WHERE user_id = ? ', [targetId]
+        );
+
+        const [listSkill] = await db.query(
+            'SELECT * FROM skill WHERE user_id = ? ', [targetId]
+        );
+
+        const [listHobby] = await db.query(
+            'SELECT * FROM hobby WHERE user_id = ? ', [targetId]
+        );
+
+        const [listInterest] = await db.query(
+            'SELECT * FROM interest WHERE user_id = ? ', [targetId]
+        );
+
+        const [totalViewsResult] = await db.query(
+                `SELECT COUNT(*) as total 
+                 FROM profile_views 
+                 WHERE target_id = ?`,
+                [targetId]
+            );
+        const totalViews = totalViewsResult[0].total;
+        if (global._io) {
+            global._io.to(`user_${targetId}`).emit("profile-viewed", {
+                from: {
+                    id: users.id,
+                    name: users.name,
+                    avatar: users.avatar
+                },
+                totalViews: totalViews
+            });
+        }
+
+        res.render('us/viewprofile', {
+            infoUser: user[0],
+            listEdu,
+            listSkill,
+            listHobby,
+            listInterest,
+            checkCouple
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
     }
 };

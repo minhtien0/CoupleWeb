@@ -672,18 +672,6 @@
                     alert('Chính sách bảo mật của Couple App');
                 }
 
-                // Navigation
-                document.addEventListener('DOMContentLoaded', function() {
-                    const tabs = document.querySelectorAll('[data-tab]');
-                    tabs.forEach(tab => {
-                        tab.addEventListener('click', () => {
-                            if (tab.dataset.tab !== 'Us') {
-                                alert(`Chuyển đến trang ${tab.dataset.tab}`);
-                            }
-                        });
-                    });
-                });
-
                 // Balance calculation
                 function calculateBalance() {
                     let anTotal = 0,

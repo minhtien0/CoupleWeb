@@ -21,7 +21,10 @@ router.get('/auth/verify-email/:token', exampleController.verifyEmail);
 router.get('/check-verification', exampleController.checkVerification);
 router.post('/resend-verification', exampleController.resendVerification);
 router.post('/logout', exampleController.Logout);
-
+router.post('/forgot-password', exampleController.forgotPassword);
+router.get('/auth/confirm-reset-password', exampleController.confirmResetPassword);
+router.get('/auth/verify-forgot-password/:token', exampleController.verifyEmailForgotPassword);
+router.get('/check-reset-verification',exampleController.checkResetVerification);
 // ===================== CÁC ROUTE CẦN LOGIN =====================
 router.use(['/invite', '/matching'], auth);
 router.post('/invite-connect', exampleController.inviteConnect);

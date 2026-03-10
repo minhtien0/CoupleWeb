@@ -5,7 +5,8 @@ const path = require('path');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const transporter = require('../config/email');
-const { getVerificationEmailHTML } = require('../views/emailTemplate');
+const { getVerificationEmailHTML } = require('../views/templategmail/emailTemplate');
+const { getForgotPasswordEmailHTML } = require('../views/templategmail/emailFogotPassword');
 const { userSockets, io } = require("../app");
 
 exports.getHome = (req, res) => {
@@ -585,7 +586,330 @@ exports.resendVerification = async(req, res) => {
     }
 };
 
+//random password
+exports.generatePassword = (length = 10) => {
+    const chars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
+    let pass = "";
+
+    for (let i = 0; i < length; i++) {
+        pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    return pass;
+};
+
+//Quên mật khẩu
+exports.forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.json({ success: false, message: "Thiếu email!" });
+        }
+
+        const [users] = await db.query(
+            "SELECT id, name FROM users WHERE email=? LIMIT 1",
+            [email]
+        );
+
+        if (!users.length) {
+            return res.json({ success: false, message: "Email không tồn tại!" });
+        }
+
+        const user = users[0];
+
+        // Tạo password mới NGAY TẠI ĐÂY để hiển thị trong email
+        const newPassword = crypto.randomBytes(6).toString("base64").slice(0, 8);
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        const token = crypto.randomBytes(32).toString("hex");
+        const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+        // Xóa token cũ
+        await db.query("DELETE FROM password_resets WHERE user_id = ?", [user.id]);
+
+        // Lưu token + hash password mới
+        await db.query(
+            `INSERT INTO password_resets (user_id, token, expires_at, new_password_hash)
+             VALUES (?, ?, ?, ?)`,
+            [user.id, token, expiresAt, hashedPassword]
+        );
+
+        const resetLink = `${process.env.APP_URL}/auth/verify-forgot-password/${token}`;
+
+        const mailOptions = {
+            from: { name: '💕 Couple Vibe', address: process.env.GMAIL_USER },
+            to: email,
+            subject: '💗 Cập nhật mật khẩu mới - Couple Vibe',
+            // Truyền thêm newPassword vào template
+            html: getForgotPasswordEmailHTML(resetLink, user.name, newPassword)
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        res.json({ success: true, message: "Vui lòng kiểm tra email để đặt lại mật khẩu!" });
+
+    } catch (err) {
+        console.error(err);
+        res.json({ success: false, message: "Lỗi server!" });
+    }
+};
+//confirm
+exports.confirmResetPassword = async (req, res) => {
+    try {
+        const { token } = req.query;
+
+        const [rows] = await db.query(
+            `SELECT * FROM password_resets
+             WHERE token = ? AND verified = 0
+             LIMIT 1`,
+            [token]
+        );
+
+        if (!rows.length) {
+            return res.json({ success: false, message: "Link không hợp lệ hoặc đã được sử dụng!" });
+        }
+
+        const request = rows[0];
+
+        if (new Date() > new Date(request.expires_at)) {
+            return res.json({ success: false, message: "Link đã hết hạn!" });
+        }
+
+        if (!request.new_password_hash) {
+            return res.json({ success: false, message: "Không tìm thấy mật khẩu mới!" });
+        }
+
+        // Áp dụng mật khẩu mới
+        await db.query(
+            "UPDATE users SET password = ? WHERE id = ?",
+            [request.new_password_hash, request.user_id]
+        );
+
+        // Đánh dấu verified = 1
+        await db.query(
+            "UPDATE password_resets SET verified = 1 WHERE id = ?",
+            [request.id]
+        );
+
+        return res.json({ success: true });
+
+    } catch (err) {
+        console.error(err);
+        return res.json({ success: false, message: "Lỗi server!" });
+    }
+};
+
+exports.checkResetVerification = async (req, res) => {
+    const { email } = req.query;
+
+    const [rows] = await db.query(`
+        SELECT pr.verified
+        FROM password_resets pr
+        JOIN users u ON u.id = pr.user_id
+        WHERE u.email = ?
+        ORDER BY pr.id DESC
+        LIMIT 1
+    `, [email]);
+
+    res.json({
+        verified: rows.length && rows[0].verified === 1
+    });
+};
+
+exports.verifyEmailForgotPassword = async (req, res) => {
+    try {
+        const { token } = req.params;
+
+        const [rows] = await db.query(
+            `SELECT * FROM password_resets 
+             WHERE token = ? AND expires_at > NOW() AND verified = 0`,
+            [token]
+        );
+
+        if (!rows.length) {
+            return res.status(400).send(`
+                <!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8">
+                <style>body{font-family:Arial;text-align:center;padding:50px;background:#fff0f5;}</style>
+                </head><body>
+                <h2>⚠️ Link đã hết hạn hoặc không hợp lệ!</h2>
+                <p>Vui lòng yêu cầu đặt lại mật khẩu mới.</p>
+                </body></html>
+            `);
+        }
+
+        // Chỉ hiển thị trang xác nhận, password đã có sẵn trong email
+        return res.send(`
+            <!DOCTYPE html>
+            <html lang="vi">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Xác nhận đổi mật khẩu - Couple Vibe</title>
+                <style>
+                    * { box-sizing: border-box; margin: 0; padding: 0; }
+                    body {
+                        font-family: 'Segoe UI', Arial, sans-serif;
+                        min-height: 100vh;
+                        background: linear-gradient(135deg, #fce4ec, #f3e5f5);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 20px;
+                    }
+                    .card {
+                        background: white;
+                        border-radius: 20px;
+                        padding: 40px 32px;
+                        max-width: 420px;
+                        width: 100%;
+                        box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+                        text-align: center;
+                    }
+                    .icon { font-size: 48px; margin-bottom: 16px; }
+                    h2 { color: #333; margin-bottom: 8px; font-size: 22px; }
+                    p { color: #666; font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
+                    .note {
+                        background: #fff8f8;
+                        border: 2px dashed #f48fb1;
+                        border-radius: 12px;
+                        padding: 16px;
+                        margin-bottom: 12px;
+                        font-size: 13px;
+                        color: #e91e63;
+                        line-height: 1.6;
+                    }
+                    .confirm-btn {
+                        width: 100%;
+                        padding: 14px;
+                        background: linear-gradient(135deg, #f06292, #ab47bc);
+                        color: white;
+                        border: none;
+                        border-radius: 12px;
+                        font-size: 16px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: opacity 0.2s;
+                        margin-top: 8px;
+                    }
+                    .confirm-btn:hover { opacity: 0.9; }
+                    .confirm-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+                    .success-msg { display:none; color:#4caf50; font-size:14px; margin-top:16px; font-weight:500; }
+                    .error-msg { display:none; color:#f44336; font-size:14px; margin-top:16px; }
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <div class="icon">🔐</div>
+                    <h2>Xác nhận đổi mật khẩu</h2>
+                    <p>Mật khẩu mới đã được gửi trong email của bạn.<br>Nhấn xác nhận để áp dụng mật khẩu đó.</p>
+
+                    <div class="note">
+                        📧 Kiểm tra email để xem mật khẩu mới<br>
+                        ⚠️ Sau khi xác nhận, hãy đăng nhập và đổi lại mật khẩu theo ý muốn
+                    </div>
+
+                    <button class="confirm-btn" id="confirmBtn" onclick="confirmChange('${token}')">
+                        ✅ Xác nhận đổi mật khẩu
+                    </button>
+
+                    <p class="success-msg" id="successMsg">🎉 Đổi mật khẩu thành công! Đang chuyển hướng...</p>
+                    <p class="error-msg" id="errorMsg"></p>
+                </div>
+
+                <script>
+                    async function confirmChange(token) {
+                        const btn = document.getElementById('confirmBtn');
+                        const successMsg = document.getElementById('successMsg');
+                        const errorMsg = document.getElementById('errorMsg');
+
+                        btn.disabled = true;
+                        btn.textContent = '🔄 Đang xử lý...';
+                        errorMsg.style.display = 'none';
+
+                        try {
+                            const res = await fetch('/auth/confirm-reset-password?token=' + token);
+                            const data = await res.json();
+
+                            if (data.success) {
+                                successMsg.style.display = 'block';
+                                btn.style.display = 'none';
+                                setTimeout(() => window.location.href = '/', 2500);
+                            } else {
+                                errorMsg.textContent = data.message || 'Có lỗi xảy ra!';
+                                errorMsg.style.display = 'block';
+                                btn.disabled = false;
+                                btn.textContent = '✅ Xác nhận đổi mật khẩu';
+                            }
+                        } catch (err) {
+                            errorMsg.textContent = 'Không kết nối được server!';
+                            errorMsg.style.display = 'block';
+                            btn.disabled = false;
+                            btn.textContent = '✅ Xác nhận đổi mật khẩu';
+                        }
+                    }
+                <\/script>
+            </body>
+            </html>
+        `);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Lỗi server!");
+    }
+};
+exports.resendVerificationForgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) return res.status(400).json({ success: false, message: "Email không hợp lệ!" });
+
+        const [users] = await db.query(
+            "SELECT id, name FROM users WHERE email = ?", [email]
+        );
+
+        if (!users.length) return res.status(400).json({ success: false, message: "Email không tồn tại!" });
+
+        const user = users[0];
+
+        const [resetRows] = await db.query(
+            "SELECT * FROM password_resets WHERE user_id = ?", [user.id]
+        );
+
+        if (!resetRows.length) return res.status(400).json({ success: false, message: "Không tìm thấy yêu cầu đặt lại mật khẩu!" });
+
+        // Tạo password mới cho lần gửi lại
+        const newPassword = crypto.randomBytes(6).toString("base64").slice(0, 8);
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        const newToken = crypto.randomBytes(32).toString("hex");
+        const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+        await db.query(
+            "UPDATE password_resets SET token = ?, expires_at = ?, new_password_hash = ? WHERE user_id = ?",
+            [newToken, expiresAt, hashedPassword, user.id]
+        );
+
+        const resetLink = `${process.env.APP_URL}/auth/verify-forgot-password/${newToken}`;
+
+        const mailOptions = {
+            from: { name: '💕 Couple Vibe', address: process.env.GMAIL_USER },
+            to: email,
+            subject: '💗 Cập nhật mật khẩu mới - Couple Vibe',
+            html: getForgotPasswordEmailHTML(resetLink, user.name, newPassword)
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        return res.json({ success: true, message: "Email đặt lại mật khẩu đã được gửi lại!" });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Có lỗi xảy ra!" });
+    }
+};
 //Đăng Xuất 
 exports.Logout = (req, res) => {
     req.session.destroy(err => {
